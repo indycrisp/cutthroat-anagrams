@@ -1,0 +1,3 @@
+- why can't I require jquery, require, and sails.io without a script tag?
+- need better module declaration system; using self.___ = function() {
+- figure out how to access username on client side (add session data to head tag?)
