@@ -5,6 +5,10 @@ define([
 ) {
 	return {	
 		init: function() {
+			io.socket.post('/user/connect', {
+				username: username
+			});
+
 			$('#chat-input').keyup(function (event) {
 				if (event.keyCode == 13) {
 					var msg = $(event.target).val();
@@ -27,6 +31,19 @@ define([
 				+ ": " + message.msg + "</div>";
 
 			$('#chat').append(msg);
+		},
+
+		updateUserList: function(data) {
+			//TODO: template
+			$('#users').empty();
+			var msg = '';
+			if (data.users.length) {
+				for (var i=0; i<data.users.length; i++) {
+					msg += "<div>" + data.users[i] + "</div>";
+				}
+			}
+	
+			$('#users').append(msg);
 		}
 	};
 });

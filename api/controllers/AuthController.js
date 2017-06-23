@@ -28,7 +28,9 @@ module.exports = {
 					res.send(err);
 				}
 
-				return res.redirect('test');
+				return res.view('test', {
+					user: user
+				});
 			});
 		})(req, res);
 	},

@@ -71,20 +71,21 @@ var test = __webpack_require__(1);
 	
 test.init();
 
-io.socket.on('connect', function socketConnected() {
+io.socket.on('connect', function socketConnected(socket) {
+	io.socket.on('chat', function messageReceived(message) {
+		test.receiveMessage(message.data);
+	});
 
-});
+	io.socket.on('updateUserList', function(message) {
+		test.updateUserList(message.data);
+	});
 
-io.socket.on('chat', function messageReceived(message) {
-	test.receiveMessage(message.data);
-});
+	io.socket.on('message', function(data) {
+	});
 
-io.socket.on('message', function(data) {
-
-});
-
-io.socket.on('disconnect', function() {
-
+	io.socket.on('disconnect', function() {
+		debugger;
+	});
 });
 
 
@@ -99,6 +100,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 ) {
 	return {	
 		init: function() {
+			io.socket.post('/user/connect', {
+				username: username
+			});
+
 			$('#chat-input').keyup(function (event) {
 				if (event.keyCode == 13) {
 					var msg = $(event.target).val();
@@ -121,6 +126,19 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 				+ ": " + message.msg + "</div>";
 
 			$('#chat').append(msg);
+		},
+
+		updateUserList: function(data) {
+			//TODO: template
+			$('#users').empty();
+			var msg = '';
+			if (data.users.length) {
+				for (var i=0; i<data.users.length; i++) {
+					msg += "<div>" + data.users[i] + "</div>";
+				}
+			}
+	
+			$('#users').append(msg);
 		}
 	};
 }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),

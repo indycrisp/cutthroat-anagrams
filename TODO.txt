@@ -1,3 +1,4 @@
-- why can't I require jquery, require, and sails.io without a script tag?
-- need better module declaration system; using self.___ = function() {
-- figure out how to access username on client side (add session data to head tag?)
+- need a way of splitting users into separate games. game room model?
+- how does socket disconnecting work? is it supposed to happen when you close the window?
+- need to create & import templates and styles
+- why can't I require jquery and sails.io without a script tag?
