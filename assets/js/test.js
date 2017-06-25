@@ -1,7 +1,8 @@
+//TODO: use LESS
 define([
-	'./test2'
+	'../styles/gameroom.css'
 ], function(
-	test2
+	gamestyles
 ) {
 	return {	
 		init: function() {
@@ -12,10 +13,14 @@ define([
 			$('#chat-input').keyup(function (event) {
 				if (event.keyCode == 13) {
 					var msg = $(event.target).val();
-					io.socket.post('/user/chat', {
-						sender: 'lala',
-						msg: msg
-					});
+					if (msg) {
+						io.socket.post('/user/chat', {
+							sender: username,
+							msg: msg
+						});
+
+						$(event.target).val('');
+					}
 				}
 			});
 		},
@@ -30,7 +35,10 @@ define([
 				+ " " + message.from
 				+ ": " + message.msg + "</div>";
 
-			$('#chat').append(msg);
+			var chatBox = $('#chat');
+			chatBox.append(msg);
+			var chatHeight = chatBox[0].scrollHeight;
+			chatBox.scrollTop(chatHeight);
 		},
 
 		updateUserList: function(data) {

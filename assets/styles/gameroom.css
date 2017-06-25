@@ -1,0 +1,28 @@
+@border-light: #eeeeee;
+body {
+	margin-left: 10px;
+}
+
+#chat-input {
+	width: 400px;
+	margin-bottom: 5px;
+}
+
+#chat {
+	height: 200px;
+	width: 400px;
+	overflow-y: scroll;
+	border: 1px solid #eeeeee;
+	font-size: 12px;
+}
+
+#users-container {
+	padding: 10px;
+	margin-right: 10px;
+	float: right;
+	border: 1px solid #eeeeee;
+}
+
+#users-title {
+	font-weight: bold;
+}

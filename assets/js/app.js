@@ -14,7 +14,6 @@ io.socket.on('connect', function socketConnected(socket) {
 	io.socket.on('message', function(data) {
 	});
 
-	io.socket.on('disconnect', function() {
-		debugger;
-	});
+	//io.socket.on('disconnect', function() {
+	//});
 });

@@ -114,18 +114,24 @@ module.exports.sockets = {
   // },
 
 
-  /***************************************************************************
-  *                                                                          *
-  * `afterDisconnect`                                                        *
-  *                                                                          *
-  * This custom afterDisconnect function will be run each time a socket      *
-  * disconnects                                                              *
-  *                                                                          *
-  ***************************************************************************/
-  // afterDisconnect: function(session, socket, cb) {
-  //   // By default: do nothing.
-  //   return cb();
-  // },
+	/***************************************************************************
+	*                                                                          *
+	* `afterDisconnect`                                                        *
+	*                                                                          *
+	* This custom afterDisconnect function will be run each time a socket      *
+	* disconnects                                                              *
+	*                                                                          *
+	***************************************************************************/
+	afterDisconnect: function(session, socket, cb) {
+		console.log(session);
+		if (session.passport && session.passport.user) {
+			User.findOne({ id: session.passport.user }).exec(function(err, user) {
+				sails.controllers.user.disconnect(user);
+			});
+		}
+
+		return cb();
+	},
 
   /***************************************************************************
   *                                                                          *
