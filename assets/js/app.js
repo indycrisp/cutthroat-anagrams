@@ -1,19 +1,20 @@
-var test = require('./test');
-	
-test.init();
+var test = require('./game');
 
 io.socket.on('connect', function socketConnected(socket) {
-	io.socket.on('chat', function messageReceived(message) {
-		test.receiveMessage(message.data);
-	});
+	io.socket.get('/current_user', function(user) {
+		window.user = user;
 
-	io.socket.on('updateUserList', function(message) {
-		test.updateUserList(message.data);
-	});
+		test.init(user);
+	
+		io.socket.on('chat', function messageReceived(message) {
+			test.receiveMessage(message);
+		});
 
-	io.socket.on('message', function(data) {
-	});
+		io.socket.on('updateUserList', function(users) {
+			test.updateUserList(users);
+		});
 
-	//io.socket.on('disconnect', function() {
-	//});
+		io.socket.on('message', function(data) {
+		});
+	});
 });

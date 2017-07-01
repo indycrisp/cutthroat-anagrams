@@ -3,6 +3,11 @@
 {% block body %}
 	<h1>Log in</h1>
 	<form method="POST" action="/login">
+		{% if err %}
+			<div>
+				<span class='error'>{{err}}</span>
+			</div>
+		{% endif %}
 		<div>
 			<span>email</span>
 			<input type="email" name="email" value="kelly@kelly.com">

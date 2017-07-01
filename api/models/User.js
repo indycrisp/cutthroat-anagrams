@@ -18,25 +18,25 @@ module.exports = {
 			required: true,
 			minLength: 6
 		},
+		game: {
+			model: 'Game'
+		},
+		room: {
+			model: 'Room'
+		},
 		toJSON: function() {
 			var obj = this.toObject();
 			delete obj.password;
 			return obj;
 		}
 	},
-	beforeCreate: function(user, cb) {
-		bcrypt.genSalt(10, function(err, salt) {
-			bcrypt.hash(user.password, salt, function(err, hash) {
-				if (err) {
-					console.log(err);
-					cb(err);
-				}
-				else {
-					user.password = hash;
-					cb();
-				}
-			});
-		});
+
+	attemptRegister: function(user, cb) {
+		User.findOne({ email: user.email }).exec(cb);
+	},
+	
+	attemptLogin: function(user, cb) {
+		User.findOne({ email: user.email }).exec(cb);
 	}
 };
 

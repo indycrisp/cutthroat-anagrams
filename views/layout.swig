@@ -8,9 +8,6 @@
 	<body>
 		<script src="/js/dependencies/jquery.min.js"></script>
 		<script src="/js/dependencies/sails.io.js"></script>
-		<script type="text/javascript">
-			var username = "{{user.email}}";
-		</script>
 		{% block body %}{% endblock %}
 		<script src="/js/dist/bundle.js"></script>
 	</body>

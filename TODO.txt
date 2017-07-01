@@ -1,3 +1,4 @@
+- handle room/socket on disconnect
 - need a way of splitting users into separate games. game room model?
 - how does socket disconnecting work? is it supposed to happen when you close the window?
 - need to create & import templates and styles

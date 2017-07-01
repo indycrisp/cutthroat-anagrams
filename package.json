@@ -25,6 +25,7 @@
     "less-loader": "^4.0.4",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
+    "password-hash": "^1.2.2",
     "rc": "1.0.1",
     "sails": "~0.12.13",
     "sails-disk": "~0.10.9",

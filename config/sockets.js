@@ -123,12 +123,9 @@ module.exports.sockets = {
 	*                                                                          *
 	***************************************************************************/
 	afterDisconnect: function(session, socket, cb) {
-		console.log(session);
-		if (session.passport && session.passport.user) {
-			User.findOne({ id: session.passport.user }).exec(function(err, user) {
-				sails.controllers.user.disconnect(user);
-			});
-		}
+		User.findOne({ id: session.me }).exec(function(err, user) {
+			sails.controllers.user.disconnect(user);
+		});
 
 		return cb();
 	},

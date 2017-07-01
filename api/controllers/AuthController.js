@@ -5,8 +5,6 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-var passport = require('passport');
-
 module.exports = {
 	_config: {
 		actions: false,
@@ -14,25 +12,23 @@ module.exports = {
 		rest: false
 	},
 
+
+	register: function(req, res) {
+		return res.register({
+			email: req.param('email'),
+			password: req.param('password'),
+			successRedirect: '/game',
+			invalidView: 'register'
+		});
+	},
+
 	login: function(req, res) {
-		passport.authenticate('local', function(err, user, info) {
-			if (err || !user) {
-				return res.send({
-					message: info.message,
-					user: user
-				});
-			}
-
-			req.logIn(user, function(err) {
-				if (err) {
-					res.send(err);
-				}
-
-				return res.view('test', {
-					user: user
-				});
-			});
-		})(req, res);
+		return res.login({
+			email: req.param('email'),
+			password: req.param('password'),
+			successRedirect: '/game',
+			invalidView: 'login'
+		});
 	},
 
 	logout: function(req, res) {

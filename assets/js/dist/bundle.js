@@ -68,23 +68,24 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 var test = __webpack_require__(1);
-	
-test.init();
 
 io.socket.on('connect', function socketConnected(socket) {
-	io.socket.on('chat', function messageReceived(message) {
-		test.receiveMessage(message.data);
-	});
+	io.socket.get('/current_user', function(user) {
+		window.user = user;
 
-	io.socket.on('updateUserList', function(message) {
-		test.updateUserList(message.data);
-	});
+		test.init(user);
+	
+		io.socket.on('chat', function messageReceived(message) {
+			test.receiveMessage(message);
+		});
 
-	io.socket.on('message', function(data) {
-	});
+		io.socket.on('updateUserList', function(users) {
+			test.updateUserList(users);
+		});
 
-	//io.socket.on('disconnect', function() {
-	//});
+		io.socket.on('message', function(data) {
+		});
+	});
 });
 
 
@@ -99,23 +100,21 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 	gamestyles
 ) {
 	return {	
-		init: function() {
-			io.socket.post('/user/connect', {
-				username: username
-			});
+		init: function(user) {
+			io.socket.post('/user/join', function(err) {
+				$('#chat-input').keyup(function (event) {
+					if (event.keyCode == 13) {
+						var msg = $(event.target).val();
+						if (msg) {
+							io.socket.post('/user/chat', {
+								sender: user.email,
+								msg: msg
+							});
 
-			$('#chat-input').keyup(function (event) {
-				if (event.keyCode == 13) {
-					var msg = $(event.target).val();
-					if (msg) {
-						io.socket.post('/user/chat', {
-							sender: username,
-							msg: msg
-						});
-
-						$(event.target).val('');
+							$(event.target).val('');
+						}
 					}
-				}
+				});
 			});
 		},
 
