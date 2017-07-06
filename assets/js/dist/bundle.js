@@ -67,20 +67,20 @@
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var test = __webpack_require__(1);
+var game = __webpack_require__(1);
 
 io.socket.on('connect', function socketConnected(socket) {
 	io.socket.get('/current_user', function(user) {
 		window.user = user;
 
-		test.init(user);
+		game.init(user);
 	
 		io.socket.on('chat', function messageReceived(message) {
-			test.receiveMessage(message);
+			game.receiveMessage(message);
 		});
 
 		io.socket.on('updateUserList', function(users) {
-			test.updateUserList(users);
+			game.updateUserList(users);
 		});
 
 		io.socket.on('message', function(data) {

@@ -28,7 +28,6 @@ module.exports = {
 		var self = this;
 
 		self.session = req;
-		//var username = req.param('username');
 		var username = req.session.username;
 
 		// TODO: put this in a User model function
@@ -103,6 +102,7 @@ module.exports = {
 		}).then(function(room) {
 			var users = _.map(room.users, 'email').sort();
 			// TODO: move socket events somewhere else
+			
 			return sails.sockets.join(req, room.id, function(err) {
 				sails.sockets.broadcast(room.id, 'updateUserList', {
 					users: users

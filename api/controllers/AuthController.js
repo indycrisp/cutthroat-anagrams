@@ -14,6 +14,7 @@ module.exports = {
 
 
 	register: function(req, res) {
+		console.log(req.param('email'));
 		return res.register({
 			email: req.param('email'),
 			password: req.param('password'),
