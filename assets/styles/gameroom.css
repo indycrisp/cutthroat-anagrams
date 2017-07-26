@@ -3,7 +3,32 @@ body {
 	margin-left: 10px;
 }
 
+#tiles-container {
+	display: inline-block;
+	width: 350px;
+	height: 350px;
+	margin-bottom: 10px;
+	word-wrap: break-word;
+}
+
+#tiles-table {
+	height: 100%;
+	width: 100%;
+	border: 1px solid #eeeeee;
+}
+
+.tile-row {
+	height: 10%;
+}
+
+.tile {
+	width: 10%;
+	border: 1px solid #eeeeee;
+	font-size: 20px;
+}
+
 #chat-input {
+	display: block;
 	width: 400px;
 	margin-bottom: 5px;
 }
@@ -14,6 +39,10 @@ body {
 	overflow-y: scroll;
 	border: 1px solid #eeeeee;
 	font-size: 12px;
+}
+
+.chat-text {
+	white-space: pre;
 }
 
 #users-container {

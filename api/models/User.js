@@ -5,7 +5,6 @@
  * @docs        :: http://sailsjs.org/documentation/concepts/models-and-orm/models
  */
 
-var bcrypt = require('bcrypt');
 module.exports = {  
 	attributes: {
 		email: {
@@ -29,6 +28,24 @@ module.exports = {
 			delete obj.password;
 			return obj;
 		}
+	},
+
+	findUsers: function(args) {
+		var self = this;
+
+		var findFunction;
+		if (args.id || args.email) {
+			findFunction = User.findOne(args);
+		}
+		else {
+			findFunction = User.find(args);
+		}
+
+		return findFunction
+			.populate('game')
+			.populate('room')
+		;
+
 	},
 
 	attemptRegister: function(user, cb) {

@@ -39,7 +39,6 @@ module.exports.routes = {
 
 	'post /register': 'AuthController.register',
 
-	//'/game': 'UserController.join',
 	'/game': {
 		view: 'game'
 	},

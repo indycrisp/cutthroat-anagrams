@@ -72,15 +72,29 @@ var game = __webpack_require__(1);
 io.socket.on('connect', function socketConnected(socket) {
 	io.socket.get('/current_user', function(user) {
 		window.user = user;
-
+		var isGame = $('#game-container').length;
+		if (!isGame) return;
+		
 		game.init(user);
-	
+
 		io.socket.on('chat', function messageReceived(message) {
 			game.receiveMessage(message);
 		});
 
 		io.socket.on('updateUserList', function(users) {
 			game.updateUserList(users);
+		});
+
+		io.socket.on('updateCountdown', function(data) {
+			game.updateCountdown(data);
+		});
+
+		io.socket.on('addTile', function(data) {
+			game.addTile(data);
+		});
+
+		io.socket.on('refreshTiles', function(data) {
+			game.refreshTiles(data);
 		});
 
 		io.socket.on('message', function(data) {
@@ -121,12 +135,12 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 		receiveMessage: function(message) {
 			var currentDate = new Date();
 			//TODO: template it
-			var msg = "<div>"
+			var msg = "<div class='chat-message'>"
 				+ currentDate.getHours() 
 				+ ":" + ('0' + currentDate.getMinutes()).slice(-2)
 				+ ":" + ('0' + currentDate.getSeconds()).slice(-2)
 				+ " " + message.from
-				+ ": " + message.msg + "</div>";
+				+ ": " + "<span class='chat-text'>" + message.msg + "</span></div>";
 
 			var chatBox = $('#chat');
 			chatBox.append(msg);
@@ -139,12 +153,30 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			$('#users').empty();
 			var msg = '';
 			if (data.users.length) {
+				//TODO: lodash _.each
 				for (var i=0; i<data.users.length; i++) {
 					msg += "<div>" + data.users[i] + "</div>";
 				}
 			}
 	
 			$('#users').append(msg);
+		},
+
+		updateCountdown: function(data) {
+			$('#countdown').html(data.seconds);
+		},
+
+		addTile: function(data) {
+			$('#tile-' + data.tileIndex).html(data.tileLetter);
+		},
+
+		refreshTiles: function(data) {
+			//TODO: lodash _.each
+			if (!data.tiles) return;
+
+			for (var i=0; i<data.tiles.length; i++) {
+				$('#tile-' + data.tiles[i].pos).html(data.tiles[i].letter);
+			}
 		}
 	};
 }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
@@ -191,7 +223,7 @@ exports = module.exports = __webpack_require__(4)(undefined);
 
 
 // module
-exports.push([module.i, "@border-light: #eeeeee;\nbody {\n\tmargin-left: 10px;\n}\n\n#chat-input {\n\twidth: 400px;\n\tmargin-bottom: 5px;\n}\n\n#chat {\n\theight: 200px;\n\twidth: 400px;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n#users-container {\n\tpadding: 10px;\n\tmargin-right: 10px;\n\tfloat: right;\n\tborder: 1px solid #eeeeee;\n}\n\n#users-title {\n\tfont-weight: bold;\n}\n", ""]);
+exports.push([module.i, "@border-light: #eeeeee;\nbody {\n\tmargin-left: 10px;\n}\n\n#tiles-container {\n\tdisplay: inline-block;\n\twidth: 350px;\n\theight: 350px;\n\tmargin-bottom: 10px;\n\tword-wrap: break-word;\n}\n\n#tiles-table {\n\theight: 100%;\n\twidth: 100%;\n\tborder: 1px solid #eeeeee;\n}\n\n.tile-row {\n\theight: 10%;\n}\n\n.tile {\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n#chat-input {\n\tdisplay: block;\n\twidth: 400px;\n\tmargin-bottom: 5px;\n}\n\n#chat {\n\theight: 200px;\n\twidth: 400px;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n#users-container {\n\tpadding: 10px;\n\tmargin-right: 10px;\n\tfloat: right;\n\tborder: 1px solid #eeeeee;\n}\n\n#users-title {\n\tfont-weight: bold;\n}\n", ""]);
 
 // exports
 

@@ -16,9 +16,6 @@ module.exports = function login(args) {
 		var hasher = require("password-hash");
 		if (hasher.verify(password, user.password)) {
 			return res.redirect(args.successRedirect);
-			//User.join(req, res).then(function(err) {
-			//	res.redirect(args.successRedirect);
-			//});
 		}
 		else {
 			return res.view(args.invalidView, { err: 'Invalid password' });
