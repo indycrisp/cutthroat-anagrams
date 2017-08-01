@@ -16,14 +16,9 @@ module.exports = {
 
 	// Broadcast a chat
 	chat: function(req, res) {
-		User.findOne({ email: req.param('sender') }).exec(function(err, user) {
+		User.findUsers({ id: req.session.me }).exec(function(err, user) {
 			GameService.word.guessWord(user, req.param('msg'))
-			.then(function() {
-				sails.sockets.broadcast(user.room, 'chat', {                                                                                                                                                                          
-					from: req.param('sender'),
-					msg: req.param('msg')
-				});
-			});
+			GameService.chat.sendChat(req);
 		});
 	},
 
@@ -45,22 +40,7 @@ module.exports = {
 				words
 			) {
 				return sails.sockets.join(req, room.id, function(err) {
-					var wordsByPlayer = {};
-					words.sort(function(a, b) {
-						return a.id - b.id;
-					});
-
-					_.each(words, function(word) {
-						if (!wordsByPlayer[word.user]) wordsByPlayer[word.user] = [];
-						wordsByPlayer[word.user].push(word);
-					});
-
-					sails.sockets.broadcast(room.id, 'refreshGameState', {
-						users: room.users,
-						tiles: tiles,
-						words: wordsByPlayer
-					});
-
+					GameService.events.refreshGameState(room, tiles, words);
 					res.ok();
 				});
 			});
@@ -79,9 +59,7 @@ module.exports = {
 			return Room.findOne({ id: roomId }).populate('users');
 		}).then(function(room) {
 			sails.sockets.leave(socket, room.id, function(err) {
-				sails.sockets.broadcast(room.id, 'updateUserList', {
-					users: room.users
-				});
+				GamesService.events.refreshUserList(room);
 			});
 		});
 	}

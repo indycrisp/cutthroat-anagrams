@@ -12,8 +12,8 @@ io.socket.on('connect', function socketConnected(socket) {
 			game.receiveMessage(message);
 		});
 
-		io.socket.on('updateUserList', function(users) {
-			game.updateUserList(users);
+		io.socket.on('refreshUserList', function(users) {
+			game.refreshUserList(users);
 		});
 
 		io.socket.on('updateCountdown', function(data) {

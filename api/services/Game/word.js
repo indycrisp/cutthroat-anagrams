@@ -1,4 +1,4 @@
-var lodash = require('lodash');
+var _ = require('lodash');
 var Promise = require('bluebird');
 var checkWord = require('check-word');
 words = checkWord('en');
@@ -16,8 +16,8 @@ module.exports = {
 		if (!words.check(word)) return Promise.resolve();
 
 		return Promise.all([
-			Gametile.find({ game: user.game, claimed: false }),
-			Gameword.find({ game: user.game })
+			Gametile.find({ game: user.game.id, claimed: false }),
+			Gameword.find({ game: user.game.id })
 		]).spread(function(
 			unclaimedGameTiles,
 			gameWords
@@ -150,7 +150,7 @@ module.exports = {
 		var self = this;
 
 		return Gameword.create({
-			game: user.game,
+			game: user.game.id,
 			word: word.toUpperCase(),
 			user: user.id
 		});
@@ -167,7 +167,6 @@ module.exports = {
 		var self = this;
 
 		var ids = _.map(tiles, 'id');
-		//return Gametile.destroy({ id: ids });
 		return Gametile.update(ids, { claimed: true });
 	}
 };

@@ -81,8 +81,8 @@ io.socket.on('connect', function socketConnected(socket) {
 			game.receiveMessage(message);
 		});
 
-		io.socket.on('updateUserList', function(users) {
-			game.updateUserList(users);
+		io.socket.on('refreshUserList', function(users) {
+			game.refreshUserList(users);
 		});
 
 		io.socket.on('updateCountdown', function(data) {
@@ -168,7 +168,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			chatBox.scrollTop(chatHeight);
 		},
 
-		updateUserList: function(data) {
+		refreshUserList: function(data) {
 			//TODO: template
 			$('#users').empty();
 			var msg = '';
@@ -194,7 +194,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 		refreshGameState: function(data) {
 			var self = this;
 
-			self.updateUserList({ users: data.users });
+			self.refreshUserList({ users: data.users });
 			self.refreshTiles({ tiles: data.tiles });	
 			self.refreshPlayerWords({
 				users: data.users,

@@ -39,7 +39,7 @@ define([
 			chatBox.scrollTop(chatHeight);
 		},
 
-		updateUserList: function(data) {
+		refreshUserList: function(data) {
 			//TODO: template
 			$('#users').empty();
 			var msg = '';
@@ -65,7 +65,7 @@ define([
 		refreshGameState: function(data) {
 			var self = this;
 
-			self.updateUserList({ users: data.users });
+			self.refreshUserList({ users: data.users });
 			self.refreshTiles({ tiles: data.tiles });	
 			self.refreshPlayerWords({
 				users: data.users,
