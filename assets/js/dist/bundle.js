@@ -93,8 +93,28 @@ io.socket.on('connect', function socketConnected(socket) {
 			game.addTile(data);
 		});
 
+		io.socket.on('refreshGameState', function(data) {
+			game.refreshGameState(data);
+		});
+
 		io.socket.on('refreshTiles', function(data) {
 			game.refreshTiles(data);
+		});
+
+		io.socket.on('refreshPlayerWords', function(data) {
+			game.refreshPlayerWords(data);
+		});
+
+		io.socket.on('removeTiles', function(data) {
+			game.removeTiles(data);
+		});
+
+		io.socket.on('addWordToPlayer', function(data) {
+			game.addWordToPlayer(data);
+		});
+
+		io.socket.on('removeWordsFromPlayers', function(data) {
+			game.removeWordsFromPlayers(data);
 		});
 
 		io.socket.on('message', function(data) {
@@ -155,7 +175,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			if (data.users.length) {
 				//TODO: lodash _.each
 				for (var i=0; i<data.users.length; i++) {
-					msg += "<div>" + data.users[i] + "</div>";
+					//TODO: make sure we have user ID here for word container ID
+					msg += "<div>" + data.users[i].email + "<div class='words-container' id='user-" + data.users[i].id + "'></div></div>";
 				}
 			}
 	
@@ -170,12 +191,81 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			$('#tile-' + data.tileIndex).html(data.tileLetter);
 		},
 
+		refreshGameState: function(data) {
+			var self = this;
+
+			self.updateUserList({ users: data.users });
+			self.refreshTiles({ tiles: data.tiles });	
+			self.refreshPlayerWords({
+				users: data.users,
+				words: data.words
+			});
+		},
+
 		refreshTiles: function(data) {
 			//TODO: lodash _.each
 			if (!data.tiles) return;
 
 			for (var i=0; i<data.tiles.length; i++) {
-				$('#tile-' + data.tiles[i].pos).html(data.tiles[i].letter);
+				var tileCell = $('#tile-' + data.tiles[i].pos);
+				if (data.tiles[i].claimed) {
+					tileCell.addClass('greyed');
+				}
+				else {
+					tileCell.html(data.tiles[i].letter);
+				}
+			}
+		},
+
+		refreshPlayerWords: function(data) {
+			if (!data.users || !data.users.length) return;
+
+			//TODO: lodash _.each
+			for (var i=0; i<data.users.length; i++) {
+				var playerWords = data.words[data.users[i].id];
+				if (!playerWords) continue;
+
+				var wordContainer = $('#user-' + data.users[i].id);
+				var newWordContainer = "<div class='words-container' id='user-" + data.users[i].id + "'>";
+				for (var j=0; j<playerWords.length; j++) {
+					//TODO: template
+					newWordContainer += "<div id='player-word-" + playerWords[j].id + "' class='player-word'>" + playerWords[j].word + "</div>";
+					//wordContainer.append(wordDiv);
+				}
+
+				newWordContainer += "</div>";
+				wordContainer.replaceWith(newWordContainer);
+			}
+		},
+
+		removeTiles: function(data) {
+			if (!data.tiles) return;
+
+			//TODO: lodash _.each
+			for (var i=0; i<data.tiles.length; i++) {
+				var tile = $('#tile-' + data.tiles[i].pos);
+				tile.html('');
+				tile.addClass('greyed');
+			}
+		},
+
+		addWordToPlayer: function(data) {
+			if (!data.user || !data.word) return;
+
+			//TODO: use user ID instead of email
+			//TODO: template
+			var wordContainer = $('#user-' + data.user.id);
+			var wordDiv = "<div id='player-word-" + data.word.id + "' class='player-word'>" + data.word.word + "</div>";
+			wordContainer.append(wordDiv);
+		},
+
+		removeWordsFromPlayers: function(data) {
+			if (!data.words) return;
+
+			//TODO: lodash _.each
+			for (var i=0; i<data.words.length; i++) {
+				var id = data.words[i].id;
+				$("#player-word-" + id).remove();
 			}
 		}
 	};
@@ -223,7 +313,7 @@ exports = module.exports = __webpack_require__(4)(undefined);
 
 
 // module
-exports.push([module.i, "@border-light: #eeeeee;\nbody {\n\tmargin-left: 10px;\n}\n\n#tiles-container {\n\tdisplay: inline-block;\n\twidth: 350px;\n\theight: 350px;\n\tmargin-bottom: 10px;\n\tword-wrap: break-word;\n}\n\n#tiles-table {\n\theight: 100%;\n\twidth: 100%;\n\tborder: 1px solid #eeeeee;\n}\n\n.tile-row {\n\theight: 10%;\n}\n\n.tile {\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n#chat-input {\n\tdisplay: block;\n\twidth: 400px;\n\tmargin-bottom: 5px;\n}\n\n#chat {\n\theight: 200px;\n\twidth: 400px;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n#users-container {\n\tpadding: 10px;\n\tmargin-right: 10px;\n\tfloat: right;\n\tborder: 1px solid #eeeeee;\n}\n\n#users-title {\n\tfont-weight: bold;\n}\n", ""]);
+exports.push([module.i, "@border-light: #eeeeee;\nbody {\n\tmargin-left: 10px;\n}\n\n#tiles-container {\n\tdisplay: inline-block;\n\twidth: 350px;\n\theight: 350px;\n\tmargin-bottom: 10px;\n\tword-wrap: break-word;\n}\n\n#tiles-table {\n\theight: 100%;\n\twidth: 100%;\n\tborder: 1px solid #eeeeee;\n}\n\n.tile-row {\n\theight: 10%;\n}\n\n.tile {\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n.greyed {\n\tbackground-color: #777777;\n}\n\n#chat-input {\n\tdisplay: block;\n\twidth: 400px;\n\tmargin-bottom: 5px;\n}\n\n#chat {\n\theight: 200px;\n\twidth: 400px;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n#users-container {\n\tpadding: 10px;\n\tmargin-right: 10px;\n\tfloat: right;\n\tborder: 1px solid #eeeeee;\n}\n\n.words-container {\n\tmargin-top: 10px;\n}\n\n#users-title {\n\tfont-weight: bold;\n}\n", ""]);
 
 // exports
 

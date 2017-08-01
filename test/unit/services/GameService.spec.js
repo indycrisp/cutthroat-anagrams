@@ -112,7 +112,13 @@ describe('The GameService', function() {
 
 		result7.should.have.length(4);
 		result7.sort().should.eql([2, 4, 5, 6]);
-		
+	
+		var testWord3 = 'whatever';
+		var testTiles8 = ['w', 'h', 'a', 't', 'e', 'v', 'e', 'r', 'w', 'h', 'a', 't', 'e', 'v', 'e', 'r', 'w', 'h', 'a', 't', 'e', 'v', 'e', 'r', 'w', 'h', 'a', 't', 'e', 'v', 'e', 'r', 'w', 'h', 'a', 't', 'e', 'v', 'e', 'r'];
+
+		var result8 = wordModule.findCombination(testWord3, testTiles8);
+		result8.should.have.length(8);
+
 		done();
 	});
 });

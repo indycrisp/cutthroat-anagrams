@@ -24,8 +24,28 @@ io.socket.on('connect', function socketConnected(socket) {
 			game.addTile(data);
 		});
 
+		io.socket.on('refreshGameState', function(data) {
+			game.refreshGameState(data);
+		});
+
 		io.socket.on('refreshTiles', function(data) {
 			game.refreshTiles(data);
+		});
+
+		io.socket.on('refreshPlayerWords', function(data) {
+			game.refreshPlayerWords(data);
+		});
+
+		io.socket.on('removeTiles', function(data) {
+			game.removeTiles(data);
+		});
+
+		io.socket.on('addWordToPlayer', function(data) {
+			game.addWordToPlayer(data);
+		});
+
+		io.socket.on('removeWordsFromPlayers', function(data) {
+			game.removeWordsFromPlayers(data);
 		});
 
 		io.socket.on('message', function(data) {

@@ -19,19 +19,13 @@ module.exports = {
 			// If there is a game with less than max people, join it
 			// Otherwise, start a new game + room and join them
 			if (user.game) {
-		 		return RoomService.join_room.joinRoom(user, user.game.room)
-				.then(function(updatedUser) {
-					//Game.rejoin(req, user.game);
-					GameService.rejoin_game.rejoinGame(req, user.game);
-					return updatedUser;
-				});
+		 		return RoomService.join_room.joinRoom(user, user.game.room);
 			}
 			else if (joinableGames.length) {
 				var gameToJoin = joinableGames[0];
 				return self.joinExistingGame(user, gameToJoin)
 				.then(function(updatedUser) {
 					if (updatedUser.game.count === 2) {
-						//Game.init(gameToJoin, updatedUser.room);
 						GameService.start_game.startGame(gameToJoin, updatedUser.room);
 					}
 

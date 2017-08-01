@@ -7,22 +7,55 @@ module.exports = {
 	guessWord: function(user, msg) {
 		var self = this;
 
+		// Skip words less than 3 letters or with spaces
 		var trimmedMsg = msg.trim();
 		if (trimmedMsg.length < 3 || /\s/.test(trimmedMsg)) { return Promise.resolve() }
-	
+		
+		// Skip non-dictionary words
 		var word = trimmedMsg.toLowerCase();	
+		if (!words.check(word)) return Promise.resolve();
+
 		return Promise.all([
-			Gametile.find({ game: user.game }, { claimed: false }),
+			Gametile.find({ game: user.game, claimed: false }),
 			Gameword.find({ game: user.game })
 		]).spread(function(
 			unclaimedGameTiles,
 			gameWords
 		) {
-			var unclaimedLetters = _.map(unclaimedGameTiles, 'letter');
-			var claimedWords = _.map(gameWords, 'word');
+			//TODO: remove other forms of the guessed word from the set of claimedWords
+			//var validClaimedWords = self.removeWordForms(word, claimedWords);
+			
+			var tilesAndWords = unclaimedGameTiles.concat(gameWords);
+			var validTileCombination = self.findCombination(word, tilesAndWords);
+			if (!validTileCombination || !validTileCombination.length) return false;
+			
+			var tilesToRemove = [];
+			var wordsToRemove = [];
+			_.each(validTileCombination, function(ind) {
+				if (tilesAndWords[ind].letter) {
+					tilesToRemove.push(tilesAndWords[ind]);
+				}
+				else {
+					wordsToRemove.push(tilesAndWords[ind]);
+				}
+			});
 
-			var isWord = words.check(word);
-			var validTileCombination = self.findCombination(word, unclaimedLetters.concat(claimedWords));
+			return Promise.all([
+				self.addPlayerWord(user, word),
+				self.removePlayerWords(wordsToRemove),
+				self.removeGameTiles(tilesToRemove)
+			]).spread(function(
+				playerWord,
+				removedWords,
+				removedTiles
+			) {
+				GameService.events.removeTiles(user, removedTiles);
+				GameService.events.addWordToPlayer(user, playerWord);
+
+				if (removedWords.length) {
+					GameService.events.removeWordsFromPlayers(user, removedWords);				
+				}
+			});
 		});
 	},
 
@@ -65,8 +98,13 @@ module.exports = {
 
 		var tilesAndWordsObj = [];
 		for (var i = 0; i < tilesAndWords.length; i++) {
+			var letter = tilesAndWords[i].letter;
+			var word = tilesAndWords[i].word;
+
+			if (word && word.toLowerCase() == guess) continue;
+
 			tilesAndWordsObj.push({
-				word: tilesAndWords[i],
+				word: letter ? letter.toLowerCase() : word.toLowerCase(),
 				ind: i
 			});
 		}
@@ -106,5 +144,30 @@ module.exports = {
 		if (recursiveFind(self.mapWordToObj(guess), 0)) return validCombo;
 
 		return;
+	},
+
+	addPlayerWord: function(user, word) {
+		var self = this;
+
+		return Gameword.create({
+			game: user.game,
+			word: word.toUpperCase(),
+			user: user.id
+		});
+	},
+
+	removePlayerWords: function(words) {
+		var self = this;
+
+		var ids = _.map(words, 'id');
+		return Gameword.destroy({ id: ids });
+	},
+
+	removeGameTiles: function(tiles) {
+		var self = this;
+
+		var ids = _.map(tiles, 'id');
+		//return Gametile.destroy({ id: ids });
+		return Gametile.update(ids, { claimed: true });
 	}
 };

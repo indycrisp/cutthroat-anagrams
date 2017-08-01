@@ -46,7 +46,8 @@ define([
 			if (data.users.length) {
 				//TODO: lodash _.each
 				for (var i=0; i<data.users.length; i++) {
-					msg += "<div>" + data.users[i] + "</div>";
+					//TODO: make sure we have user ID here for word container ID
+					msg += "<div>" + data.users[i].email + "<div class='words-container' id='user-" + data.users[i].id + "'></div></div>";
 				}
 			}
 	
@@ -61,12 +62,81 @@ define([
 			$('#tile-' + data.tileIndex).html(data.tileLetter);
 		},
 
+		refreshGameState: function(data) {
+			var self = this;
+
+			self.updateUserList({ users: data.users });
+			self.refreshTiles({ tiles: data.tiles });	
+			self.refreshPlayerWords({
+				users: data.users,
+				words: data.words
+			});
+		},
+
 		refreshTiles: function(data) {
 			//TODO: lodash _.each
 			if (!data.tiles) return;
 
 			for (var i=0; i<data.tiles.length; i++) {
-				$('#tile-' + data.tiles[i].pos).html(data.tiles[i].letter);
+				var tileCell = $('#tile-' + data.tiles[i].pos);
+				if (data.tiles[i].claimed) {
+					tileCell.addClass('greyed');
+				}
+				else {
+					tileCell.html(data.tiles[i].letter);
+				}
+			}
+		},
+
+		refreshPlayerWords: function(data) {
+			if (!data.users || !data.users.length) return;
+
+			//TODO: lodash _.each
+			for (var i=0; i<data.users.length; i++) {
+				var playerWords = data.words[data.users[i].id];
+				if (!playerWords) continue;
+
+				var wordContainer = $('#user-' + data.users[i].id);
+				var newWordContainer = "<div class='words-container' id='user-" + data.users[i].id + "'>";
+				for (var j=0; j<playerWords.length; j++) {
+					//TODO: template
+					newWordContainer += "<div id='player-word-" + playerWords[j].id + "' class='player-word'>" + playerWords[j].word + "</div>";
+					//wordContainer.append(wordDiv);
+				}
+
+				newWordContainer += "</div>";
+				wordContainer.replaceWith(newWordContainer);
+			}
+		},
+
+		removeTiles: function(data) {
+			if (!data.tiles) return;
+
+			//TODO: lodash _.each
+			for (var i=0; i<data.tiles.length; i++) {
+				var tile = $('#tile-' + data.tiles[i].pos);
+				tile.html('');
+				tile.addClass('greyed');
+			}
+		},
+
+		addWordToPlayer: function(data) {
+			if (!data.user || !data.word) return;
+
+			//TODO: use user ID instead of email
+			//TODO: template
+			var wordContainer = $('#user-' + data.user.id);
+			var wordDiv = "<div id='player-word-" + data.word.id + "' class='player-word'>" + data.word.word + "</div>";
+			wordContainer.append(wordDiv);
+		},
+
+		removeWordsFromPlayers: function(data) {
+			if (!data.words) return;
+
+			//TODO: lodash _.each
+			for (var i=0; i<data.words.length; i++) {
+				var id = data.words[i].id;
+				$("#player-word-" + id).remove();
 			}
 		}
 	};
