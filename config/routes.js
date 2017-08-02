@@ -25,23 +25,17 @@ module.exports.routes = {
 		view: 'login'
 	},
 	
-	'get /login': {
-		view: 'login'
-	},
+	'get /login': 'AuthController.viewLogin',
 
 	'post /login': 'AuthController.login',
 
 	'/logout': 'AuthController.logout',
 
-	'get /register': {
-		view: 'register'
-	},
-
+	'get /register': 'AuthController.viewRegister',
+	
 	'post /register': 'AuthController.register',
 
-	'/game': {
-		view: 'game'
-	},
+	'get /game': 'GameController.viewGame',
 	
 	'get /current_user': 'UserController.getUser'
 };

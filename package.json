@@ -10,6 +10,7 @@
     "check-word": "^1.1.0",
     "css-loader": "^0.28.4",
     "ejs": "2.3.4",
+    "fs": "0.0.1-security",
     "grunt": "1.0.1",
     "grunt-contrib-clean": "1.0.0",
     "grunt-contrib-coffee": "1.0.0",
@@ -25,6 +26,7 @@
     "include-all": "^1.0.0",
     "jquery": "^3.2.1",
     "less-loader": "^4.0.4",
+    "lodash": "^4.17.4",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
     "password-hash": "^1.2.2",
@@ -33,7 +35,9 @@
     "sails-disk": "~0.10.9",
     "save-dev": "^2.0.0",
     "style-loader": "^0.18.2",
-    "swig": "^1.4.2"
+    "swig": "^1.4.2",
+    "swig-loader": "^2.1.0",
+    "webpack-swig-loader": "^0.2.0"
   },
   "scripts": {
     "debug": "node debug app.js",

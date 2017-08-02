@@ -6,6 +6,8 @@
  */
 
 module.exports = {
-	
+	viewGame: function(req, res) {
+		res.view('game.ejs', { title: 'Cutthroat' });
+	}	
 };
 

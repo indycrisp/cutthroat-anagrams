@@ -1,13 +1,12 @@
-{% extends 'layout.swig' %}
 {% set title = 'Register' %}
 {% block body %}
 	<h1>Register</h1>
 	<form method="POST" action="/register">
-		{% if err %}
+		{% if (err) { %}
 			<div>
-				<span class='error'>{{err}}</span>
+				<span class='error'><%= err %></span>
 			</div>
-		{% endif %}
+		{% } %}
 		<div>
 			<span>email</span>
 			<input type="email" name="email" value="kelly@kelly.com">

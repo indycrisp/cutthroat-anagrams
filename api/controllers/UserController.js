@@ -32,15 +32,17 @@ module.exports = {
 		.then(function(updatedUser) {
 			return Promise.all([
 				Room.findRooms({ id: updatedUser.room.id }),
+				Game.findGames({ id: updatedUser.game.id }),
 				Gametile.find({ game: updatedUser.game.id }),
 				Gameword.find({ game: updatedUser.game.id })
 			]).spread(function(
 				room,
+				game,
 				tiles,
 				words
 			) {
 				return sails.sockets.join(req, room.id, function(err) {
-					GameService.events.refreshGameState(room, tiles, words);
+					GameService.events.refreshGameState(room, game, tiles, words);
 					res.ok();
 				});
 			});
@@ -59,7 +61,7 @@ module.exports = {
 			return Room.findOne({ id: roomId }).populate('users');
 		}).then(function(room) {
 			sails.sockets.leave(socket, room.id, function(err) {
-				GamesService.events.refreshUserList(room);
+				GameService.events.userDisconnect(user, room);
 			});
 		});
 	}

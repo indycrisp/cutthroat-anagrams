@@ -25,7 +25,7 @@ module.exports = {
 		});
 	},
 
-	refreshGameState: function(room, tiles, words) {
+	refreshGameState: function(room, game, tiles, words) {
 		var wordsByPlayer = {};
 		words.sort(function(a, b) {
 			return a.id - b.id;
@@ -37,16 +37,15 @@ module.exports = {
 		});
 
 		sails.sockets.broadcast(room.id, 'refreshGameState', {
-			users: room.users,
+			users: game.users,
 			tiles: tiles,
 			words: wordsByPlayer
 		});
 	},
 
-	refreshUserList: function(room) {
-		console.log(room);
-		sails.sockets.broadcast(room.id, 'refreshUserList', {
-			users: room.users
+	userDisconnect: function(user, room) {
+		sails.sockets.broadcast(room.id, 'userDisconnect', {
+			user: user
 		});
 	}
 };

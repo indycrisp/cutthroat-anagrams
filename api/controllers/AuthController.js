@@ -34,6 +34,20 @@ module.exports = {
 	logout: function(req, res) {
 		req.logout();
 		res.redirect('/');
-	}	
+	},
+
+	viewRegister: function(req, res) {
+		res.view('register.ejs', {
+			title: 'Register',
+	   		err: ''
+		});
+	},
+
+	viewLogin: function(req, res) {
+		res.view('login.ejs', {
+			title: 'Login',
+			err: ''
+		});
+	}
 };
 
