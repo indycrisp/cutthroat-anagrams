@@ -24,8 +24,11 @@ module.exports = {
 		) {
 			//TODO: remove other forms of the guessed word from the set of claimedWords
 			//var validClaimedWords = self.removeWordForms(word, claimedWords);
-			
-			var tilesAndWords = unclaimedGameTiles.concat(gameWords);
+			var validClaimedWords = _.remove(gameWords, function(gameWord) {	
+				return gameWord.word.length < word.length;
+			});
+
+			var tilesAndWords = unclaimedGameTiles.concat(validClaimedWords);
 			var validTileCombination = self.findCombination(word, tilesAndWords);
 			if (!validTileCombination || !validTileCombination.length) return false;
 			

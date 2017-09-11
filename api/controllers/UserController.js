@@ -17,7 +17,6 @@ module.exports = {
 	// Broadcast a chat
 	chat: function(req, res) {
 		User.findUsers({ id: req.session.me }).exec(function(err, user) {
-			GameService.word.guessWord(user, req.param('msg'))
 			GameService.chat.sendChat(req);
 		});
 	},

@@ -70,6 +70,6 @@ module.exports = {
 			else {
 				countdown--;
 			}
-		}, 100);
+		}, 10);
 	}
 };

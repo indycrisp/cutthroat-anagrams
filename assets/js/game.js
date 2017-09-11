@@ -97,7 +97,8 @@ define([
 					username: user.email,
 					userId: user.id,
 					userStatus: user.room ? 'connected' : 'disconnected',
-					words: playerWords
+					words: playerWords,
+					wordTemplate: JST['assets/templates/word.ejs']
 				});
 
 				usersHTML += newWordContainer;

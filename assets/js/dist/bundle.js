@@ -226,7 +226,8 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 					username: user.email,
 					userId: user.id,
 					userStatus: user.room ? 'connected' : 'disconnected',
-					words: playerWords
+					words: playerWords,
+					wordTemplate: JST['assets/templates/word.ejs']
 				});
 
 				usersHTML += newWordContainer;

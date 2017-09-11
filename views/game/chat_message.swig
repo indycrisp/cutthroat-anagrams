@@ -1,5 +1,0 @@
-<div class='chat-message'>
-	<span class='chat-time'>{{ hour }}:{{ minute }}:{{ second }}</span>
-	<span class='chat-username'>{{ username }}</span>
-	<span class='chat-message'>{{ message }}</span>
-</div>

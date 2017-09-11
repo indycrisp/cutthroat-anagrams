@@ -76,16 +76,25 @@ describe('The GameService', function() {
 	it('test findCombination', function(done) {
 		var wordModule = GameService.word;
 
+		var convert = function(letter) {
+			if (letter.length > 1) {
+				return { 'word' : letter };
+			}
+			else {
+				return { 'letter' : letter };
+			}
+		};
+
 		var testWord = 'hat';
 		var testTiles1 = [];
 		var testTiles2 = ['h', 'a', 't'];
 		var testTiles3 = ['t', 'h', 'a'];
 		var testTiles4 = ['b', 't', 'h', 'b'];
 
-		var result1 = wordModule.findCombination(testWord, testTiles1);
-		var result2 = wordModule.findCombination(testWord, testTiles2);
-		var result3 = wordModule.findCombination(testWord, testTiles3);
-		var result4 = wordModule.findCombination(testWord, testTiles4);
+		var result1 = wordModule.findCombination(testWord, _.map(testTiles1, convert));
+		var result2 = wordModule.findCombination(testWord, _.map(testTiles2, convert));
+		var result3 = wordModule.findCombination(testWord, _.map(testTiles3, convert));
+		var result4 = wordModule.findCombination(testWord, _.map(testTiles4, convert));
 
 		(result1 == undefined).should.be.true;
 		result2.should.have.length(3);
@@ -100,9 +109,9 @@ describe('The GameService', function() {
 		var testTiles5 = ['tape', 'cant', 'i', 'i'];
 		var testTiles6 = ['tape', 'i', 'n', 'matter', 'i', 'poop', 'cant'];
 		var testTiles7 = ['tap', 'e', 'i', 'n', 'tape', 'i', 'cant'];
-		var result5 = wordModule.findCombination(testWord2, testTiles5);
-		var result6 = wordModule.findCombination(testWord2, testTiles6);
-		var result7 = wordModule.findCombination(testWord2, testTiles7);
+		var result5 = wordModule.findCombination(testWord2, _.map(testTiles5, convert));
+		var result6 = wordModule.findCombination(testWord2, _.map(testTiles6, convert));
+		var result7 = wordModule.findCombination(testWord2, _.map(testTiles7, convert));
 
 		result5.should.have.length(4);
 		result5.sort().should.eql([0, 1, 2, 3]);
@@ -116,7 +125,7 @@ describe('The GameService', function() {
 		var testWord3 = 'whatever';
 		var testTiles8 = ['w', 'h', 'a', 't', 'e', 'v', 'e', 'r', 'w', 'h', 'a', 't', 'e', 'v', 'e', 'r', 'w', 'h', 'a', 't', 'e', 'v', 'e', 'r', 'w', 'h', 'a', 't', 'e', 'v', 'e', 'r', 'w', 'h', 'a', 't', 'e', 'v', 'e', 'r'];
 
-		var result8 = wordModule.findCombination(testWord3, testTiles8);
+		var result8 = wordModule.findCombination(testWord3, _.map(testTiles8, convert));
 		result8.should.have.length(8);
 
 		done();
