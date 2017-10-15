@@ -1,12 +1,25 @@
 @border-light: #eeeeee;
+html {
+	height: 100%;
+	width: 100%;
+}
+
 body {
 	margin-left: 10px;
+	height: 100%;
+	width: 100%;
+}
+
+#game-container {
+	height: 100%;
 }
 
 #tiles-container {
+	width: 100%;
+	height: 60%;
+	min-height: 300px;
+	float: left;
 	display: inline-block;
-	width: 350px;
-	height: 350px;
 	margin-bottom: 10px;
 	word-wrap: break-word;
 }
@@ -31,15 +44,24 @@ body {
 	background-color: #777777;
 }
 
+#chat-container {
+	width: 100%;
+	height: 40%;
+	min-height: 300px;
+	display: inline-block;
+	float: left;
+	vertical-align: top;
+}
+
 #chat-input {
 	display: block;
-	width: 400px;
+	width: 100%;
 	margin-bottom: 5px;
 }
 
 #chat {
 	height: 200px;
-	width: 400px;
+	width: 100%;
 	overflow-y: scroll;
 	border: 1px solid #eeeeee;
 	font-size: 12px;
@@ -50,9 +72,10 @@ body {
 }
 
 #users-container {
+	width: 100%;
+	display: inline-block;
 	padding: 10px;
-	margin-right: 10px;
-	float: right;
+	float: left;
 	border: 1px solid #eeeeee;
 }
 
@@ -62,4 +85,34 @@ body {
 
 #users-title {
 	font-weight: bold;
+}
+
+.menu-container {
+	width: 100%;	
+	padding: 10px;
+}
+
+.new-game-button-hidden {
+	display: none;
+}
+
+.column-left {
+	float: left;
+	display: inline-block;
+	width: 25%;
+	height: 100%;
+}
+
+.column-middle {
+	float: left;
+	display: inline-block;
+	width: 50%;
+	height: 100%;
+}
+
+.column-right {
+	float: left;
+	display: inline-block;
+	width: 25%;
+	height: 100%;
 }

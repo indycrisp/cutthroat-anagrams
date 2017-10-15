@@ -48,6 +48,10 @@ module.exports = {
 		},
 		count: {
 			type: 'integer'
+		},
+		completed: {
+			type: 'boolean',
+			defaultsTo: false
 		}
 	},
 

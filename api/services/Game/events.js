@@ -37,6 +37,7 @@ module.exports = {
 		});
 
 		sails.sockets.broadcast(room.id, 'refreshGameState', {
+			game: game,
 			users: game.users,
 			tiles: tiles,
 			words: wordsByPlayer
@@ -45,6 +46,12 @@ module.exports = {
 
 	userDisconnect: function(user, room) {
 		sails.sockets.broadcast(room.id, 'userDisconnect', {
+			user: user
+		});
+	},
+
+	userLeave: function(user, room) {
+		sails.sockets.broadcast(room.id, 'userLeave', {
 			user: user
 		});
 	}

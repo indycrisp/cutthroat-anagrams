@@ -63,6 +63,24 @@ module.exports = {
 				GameService.events.userDisconnect(user, room);
 			});
 		});
+	},
+
+	leaveGame: function(req, res) {
+		var self = this;
+
+		var user;
+		var room;
+		User.findUsers({ id: req.session.me })
+		.then(function(foundUser) {
+			user = foundUser;
+			room = foundUser.room;
+			return User.update({ id: req.session.me }, { room: undefined, game: undefined });
+		}).then(function(users) {
+			sails.sockets.leave(req, room.id, function(err) {
+				GameService.events.userLeave(user, room);
+				res.ok();
+			});
+		});
 	}
 };
 

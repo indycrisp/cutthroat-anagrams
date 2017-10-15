@@ -8,6 +8,10 @@ define([
 ) {
 	return {	
 		init: function(user) {
+			var self = this;
+
+			self.user = user;
+
 			//TODO: Have the controller do the "joining" before the rendering (res.view())
 			io.socket.post('/user/join', function(err) {
 				$('#chat-input').keyup(function (event) {
@@ -23,7 +27,42 @@ define([
 						}
 					}
 				});
+
+				self.attachListeners();
 			});
+	
+			self.handleResize();
+		},
+
+		attachListeners: function() {
+			var self = this;
+
+			$(window).resize(function() {
+				self.handleResize();
+			});
+
+			$('.new-game-button').off('click').click(function() {
+				io.socket.post('/user/leaveGame', { userId: user.id }, function(err) {
+					io.socket.post('/user/join', { userId: user.id });	
+				});
+			});
+		},
+
+
+		handleResize: function() {
+			var tileContainer = $('#tiles-container');
+			var tileHeight = tileContainer.height();
+			tileContainer.width(tileHeight);
+			$('#chat-container').width(tileHeight);
+
+			var bodyWidth = $('body').width();
+			if (!bodyWidth) return;
+
+			var newMiddleColumnWidth = tileHeight;
+			var newSideColumnWidth = (bodyWidth - newMiddleColumnWidth ) / 2;
+			$('.column-left,.column-right').width(newSideColumnWidth);
+			$('.column-middle').width(newMiddleColumnWidth);
+			
 		},
 
 		receiveMessage: function(message) {
@@ -60,19 +99,47 @@ define([
 			userStatus.replaceWith(newStatus);
 		},
 
+		userLeave: function(data) {
+			var userStatus = $('#user-status-' + data.user.id);
+			var newStatus = JST['assets/templates/user_status.ejs']({
+				userId: data.user.id,
+				userStatus: 'left'
+			});
+
+			userStatus.replaceWith(newStatus);
+		},
+
+
 		refreshGameState: function(data) {
 			var self = this;
 
+			self.refreshChat();
 			self.refreshTiles({ tiles: data.tiles });	
-			self.refreshPlayerWords({
+			self.refreshUserBoard({
 				users: data.users,
 				words: data.words
 			});
+
+			self.refreshMenu({ game: data.game });
+			self.attachListeners();
+		},
+
+		refreshChat: function() {
+			var self = this;
+
+			var chatBox = JST['assets/templates/chat_box.ejs']();
+			$('#chat-container').html(chatBox);
 		},
 
 		refreshTiles: function(data) {
 			if (!data.tiles) return;
 
+			var tileTable = JST['assets/templates/tile_table.ejs']();
+			$('#tiles-container').html(tileTable);
+
+			//TODO: is this overkill? loop through each tile, check if data.tiles has
+			//something.  if it does, use that value, otherwise clear it
+			$('.tile').removeClass('greyed').html('');
 			_.each(data.tiles, function(tile) {
 				var tileCell = $('#tile-' + tile.pos);
 				if (tile.claimed) {
@@ -84,8 +151,11 @@ define([
 			});
 		},
 
-		refreshPlayerWords: function(data) {
+		refreshUserBoard: function(data) {
 			if (!data.users || !data.users.length) return;
+
+			var userBoardContainer = JST['assets/templates/user_board.ejs']();
+			$('#users-container').html(userBoardContainer);
 
 			var usersHTML = '';
 			_.each(data.users, function(user) {
@@ -105,6 +175,16 @@ define([
 			});
 
 			$('#users').html(usersHTML);
+		},
+
+		refreshMenu: function(data) {
+			if (!data.game) return;
+
+			var menuContent = JST['assets/templates/menu.ejs']({
+				gameCompleted: data.game.completed
+			});
+
+			$('.menu-container').html(menuContent);
 		},
 
 		removeTiles: function(data) {
@@ -134,6 +214,10 @@ define([
 			_.each(data.words, function(word) {
 				$("#player-word-" + word.id).remove();
 			});
+		},
+
+		endGame: function(data) {
+			$('.new-game-button').removeClass('new-game-button-hidden');
 		}
 	};
 });

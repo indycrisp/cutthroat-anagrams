@@ -74,12 +74,15 @@ module.exports = {
 	// Tie a user model to a game model, and increment the game's user count
 	addUserToGame: function(user, game) {
 		var self = this;
-	
+
 		return Game.update({ id: game.id }, { count: game.count + 1 })
 		.then(function(updatedGames) {
 			return User.update({ id: user.id }, { game: updatedGames[0].id });
 		})
 		.then(function(users) {
+			return Usergamehistory.create({ user: user, game: game });
+		})
+		.then(function(history) {
 			return User.findUsers({ id: user.id });
 		});
 	}

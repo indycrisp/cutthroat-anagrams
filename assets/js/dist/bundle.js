@@ -85,6 +85,10 @@ io.socket.on('connect', function socketConnected(socket) {
 			game.userDisconnect(data);
 		});
 
+		io.socket.on('userLeave', function(data) {
+			game.userLeave(data);
+		});
+
 		io.socket.on('updateCountdown', function(data) {
 			game.updateCountdown(data);
 		});
@@ -119,6 +123,11 @@ io.socket.on('connect', function socketConnected(socket) {
 
 		io.socket.on('message', function(data) {
 		});
+
+		io.socket.on('endGame', function(data) {
+			game.endGame(data);
+		});
+
 	});
 });
 
@@ -137,6 +146,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 ) {
 	return {	
 		init: function(user) {
+			var self = this;
+
+			self.user = user;
+
 			//TODO: Have the controller do the "joining" before the rendering (res.view())
 			io.socket.post('/user/join', function(err) {
 				$('#chat-input').keyup(function (event) {
@@ -152,7 +165,42 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 						}
 					}
 				});
+
+				self.attachListeners();
 			});
+	
+			self.handleResize();
+		},
+
+		attachListeners: function() {
+			var self = this;
+
+			$(window).resize(function() {
+				self.handleResize();
+			});
+
+			$('.new-game-button').off('click').click(function() {
+				io.socket.post('/user/leaveGame', { userId: user.id }, function(err) {
+					io.socket.post('/user/join', { userId: user.id });	
+				});
+			});
+		},
+
+
+		handleResize: function() {
+			var tileContainer = $('#tiles-container');
+			var tileHeight = tileContainer.height();
+			tileContainer.width(tileHeight);
+			$('#chat-container').width(tileHeight);
+
+			var bodyWidth = $('body').width();
+			if (!bodyWidth) return;
+
+			var newMiddleColumnWidth = tileHeight;
+			var newSideColumnWidth = (bodyWidth - newMiddleColumnWidth ) / 2;
+			$('.column-left,.column-right').width(newSideColumnWidth);
+			$('.column-middle').width(newMiddleColumnWidth);
+			
 		},
 
 		receiveMessage: function(message) {
@@ -189,19 +237,47 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			userStatus.replaceWith(newStatus);
 		},
 
+		userLeave: function(data) {
+			var userStatus = $('#user-status-' + data.user.id);
+			var newStatus = JST['assets/templates/user_status.ejs']({
+				userId: data.user.id,
+				userStatus: 'left'
+			});
+
+			userStatus.replaceWith(newStatus);
+		},
+
+
 		refreshGameState: function(data) {
 			var self = this;
 
+			self.refreshChat();
 			self.refreshTiles({ tiles: data.tiles });	
-			self.refreshPlayerWords({
+			self.refreshUserBoard({
 				users: data.users,
 				words: data.words
 			});
+
+			self.refreshMenu({ game: data.game });
+			self.attachListeners();
+		},
+
+		refreshChat: function() {
+			var self = this;
+
+			var chatBox = JST['assets/templates/chat_box.ejs']();
+			$('#chat-container').html(chatBox);
 		},
 
 		refreshTiles: function(data) {
 			if (!data.tiles) return;
 
+			var tileTable = JST['assets/templates/tile_table.ejs']();
+			$('#tiles-container').html(tileTable);
+
+			//TODO: is this overkill? loop through each tile, check if data.tiles has
+			//something.  if it does, use that value, otherwise clear it
+			$('.tile').removeClass('greyed').html('');
 			_.each(data.tiles, function(tile) {
 				var tileCell = $('#tile-' + tile.pos);
 				if (tile.claimed) {
@@ -213,8 +289,11 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			});
 		},
 
-		refreshPlayerWords: function(data) {
+		refreshUserBoard: function(data) {
 			if (!data.users || !data.users.length) return;
+
+			var userBoardContainer = JST['assets/templates/user_board.ejs']();
+			$('#users-container').html(userBoardContainer);
 
 			var usersHTML = '';
 			_.each(data.users, function(user) {
@@ -234,6 +313,16 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			});
 
 			$('#users').html(usersHTML);
+		},
+
+		refreshMenu: function(data) {
+			if (!data.game) return;
+
+			var menuContent = JST['assets/templates/menu.ejs']({
+				gameCompleted: data.game.completed
+			});
+
+			$('.menu-container').html(menuContent);
 		},
 
 		removeTiles: function(data) {
@@ -263,6 +352,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			_.each(data.words, function(word) {
 				$("#player-word-" + word.id).remove();
 			});
+		},
+
+		endGame: function(data) {
+			$('.new-game-button').removeClass('new-game-button-hidden');
 		}
 	};
 }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
@@ -309,7 +402,7 @@ exports = module.exports = __webpack_require__(4)(undefined);
 
 
 // module
-exports.push([module.i, "@border-light: #eeeeee;\nbody {\n\tmargin-left: 10px;\n}\n\n#tiles-container {\n\tdisplay: inline-block;\n\twidth: 350px;\n\theight: 350px;\n\tmargin-bottom: 10px;\n\tword-wrap: break-word;\n}\n\n#tiles-table {\n\theight: 100%;\n\twidth: 100%;\n\tborder: 1px solid #eeeeee;\n}\n\n.tile-row {\n\theight: 10%;\n}\n\n.tile {\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n.greyed {\n\tbackground-color: #777777;\n}\n\n#chat-input {\n\tdisplay: block;\n\twidth: 400px;\n\tmargin-bottom: 5px;\n}\n\n#chat {\n\theight: 200px;\n\twidth: 400px;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n#users-container {\n\tpadding: 10px;\n\tmargin-right: 10px;\n\tfloat: right;\n\tborder: 1px solid #eeeeee;\n}\n\n.words-container {\n\tmargin-top: 10px;\n}\n\n#users-title {\n\tfont-weight: bold;\n}\n", ""]);
+exports.push([module.i, "@border-light: #eeeeee;\nhtml {\n\theight: 100%;\n\twidth: 100%;\n}\n\nbody {\n\tmargin-left: 10px;\n\theight: 100%;\n\twidth: 100%;\n}\n\n#game-container {\n\theight: 100%;\n}\n\n#tiles-container {\n\twidth: 100%;\n\theight: 60%;\n\tmin-height: 300px;\n\tfloat: left;\n\tdisplay: inline-block;\n\tmargin-bottom: 10px;\n\tword-wrap: break-word;\n}\n\n#tiles-table {\n\theight: 100%;\n\twidth: 100%;\n\tborder: 1px solid #eeeeee;\n}\n\n.tile-row {\n\theight: 10%;\n}\n\n.tile {\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n.greyed {\n\tbackground-color: #777777;\n}\n\n#chat-container {\n\twidth: 100%;\n\theight: 40%;\n\tmin-height: 300px;\n\tdisplay: inline-block;\n\tfloat: left;\n\tvertical-align: top;\n}\n\n#chat-input {\n\tdisplay: block;\n\twidth: 100%;\n\tmargin-bottom: 5px;\n}\n\n#chat {\n\theight: 200px;\n\twidth: 100%;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n#users-container {\n\twidth: 100%;\n\tdisplay: inline-block;\n\tpadding: 10px;\n\tfloat: left;\n\tborder: 1px solid #eeeeee;\n}\n\n.words-container {\n\tmargin-top: 10px;\n}\n\n#users-title {\n\tfont-weight: bold;\n}\n\n.menu-container {\n\twidth: 100%;\t\n\tpadding: 10px;\n}\n\n.new-game-button-hidden {\n\tdisplay: none;\n}\n\n.column-left {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.column-middle {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 50%;\n\theight: 100%;\n}\n\n.column-right {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n", ""]);
 
 // exports
 

@@ -16,6 +16,10 @@ io.socket.on('connect', function socketConnected(socket) {
 			game.userDisconnect(data);
 		});
 
+		io.socket.on('userLeave', function(data) {
+			game.userLeave(data);
+		});
+
 		io.socket.on('updateCountdown', function(data) {
 			game.updateCountdown(data);
 		});
@@ -50,5 +54,10 @@ io.socket.on('connect', function socketConnected(socket) {
 
 		io.socket.on('message', function(data) {
 		});
+
+		io.socket.on('endGame', function(data) {
+			game.endGame(data);
+		});
+
 	});
 });

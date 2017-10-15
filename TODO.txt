@@ -1,5 +1,8 @@
+- fix rendering issue where content briefly flashes before styles are applied
+	- finish moving relevant "view ejs" files to "assets/templates"
+- make "end game" button show when reloading page in a finished game
+- how do I use less?
+- track winner, record game histories
+- figure out issue with disallowing forms of words
 - handle room/socket on disconnect
-- need a way of splitting users into separate games. game room model?
-- how does socket disconnecting work? is it supposed to happen when you close the window?
-- need to create & import templates and styles
 - why can't I require jquery and sails.io without a script tag?

@@ -36,15 +36,28 @@ module.exports = {
 	startGameInterval: function(game, room, tileData) {
 		var self = this;
 
-		var countdown = 10;
+		var gameEnding = false;
+		var countdown = 5;
 		var interval = setInterval(function() {
 			if (tileData.tileIndexes.length === 0) {
-				clearInterval(interval);
+				if (gameEnding && countdown === 0) {
+					clearInterval(interval);
+					GameService.end_game.endGame(game, room);
+				}
+				else if (!gameEnding) {
+					gameEnding = true;
+					countdown = 15;
+				}
 			}
 
 			sails.sockets.broadcast(room.id, 'updateCountdown', {
 				seconds: countdown
 			});
+
+			if (gameEnding) {
+				countdown--;
+				return;
+			}
 
 			if (countdown === 0) {
 				var randIndex = Math.floor(Math.random() * tileData.tileIndexes.length);
@@ -65,11 +78,11 @@ module.exports = {
 				tileData.tileIndexes.splice(randIndex, 1);
 				tileData.tileSet.splice(randLetterIndex, 1);
 
-				countdown = 10;
+				countdown = 5;
 			}
 			else {
 				countdown--;
 			}
-		}, 10);
+		}, 1);
 	}
 };

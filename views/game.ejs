@@ -1,13 +1,13 @@
 <div id='game-container'>
-	<h1>Cutthroat Anagrams</h1>
-	<div id='countdown'></div>
-	<div id='tiles-container'>
-		<%- include game/tile_table.ejs %>
+	<div class='column-left'>
+		<div id='countdown'></div>
+		<div id='users-container'></div>
 	</div>
-	<div id='users-container'>
-		<%- include game/user_board.ejs %>
+	<div class='column-middle'>
+		<div id='tiles-container'></div>
+		<div id='chat-container'></div>
 	</div>
-	<div id='chat-container'>
-		<%- include game/chat_box.ejs %>
+	<div class='column-right'>
+		<div class='menu-container'></div>
 	</div>
 </div>
