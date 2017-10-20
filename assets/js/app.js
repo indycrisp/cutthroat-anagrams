@@ -8,8 +8,8 @@ io.socket.on('connect', function socketConnected(socket) {
 		
 		game.init(user);
 
-		io.socket.on('chat', function messageReceived(message) {
-			game.receiveMessage(message);
+		io.socket.on('chat', function messageReceived(data) {
+			game.receiveChat(data);
 		});
 
 		io.socket.on('userDisconnect', function(data) {

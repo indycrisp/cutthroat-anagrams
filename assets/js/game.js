@@ -14,20 +14,6 @@ define([
 
 			//TODO: Have the controller do the "joining" before the rendering (res.view())
 			io.socket.post('/user/join', function(err) {
-				$('#chat-input').keyup(function (event) {
-					if (event.keyCode == 13) {
-						var msg = $(event.target).val();
-						if (msg) {
-							io.socket.post('/user/chat', {
-								sender: user.email,
-								msg: msg
-							});
-
-							$(event.target).val('');
-						}
-					}
-				});
-
 				self.attachListeners();
 			});
 	
@@ -45,6 +31,20 @@ define([
 				io.socket.post('/user/leaveGame', { userId: user.id }, function(err) {
 					io.socket.post('/user/join', { userId: user.id });	
 				});
+			});
+
+			$('#chat-input').keyup(function(event) {
+				if (event.keyCode == 13) {
+					var msg = $(event.target).val();
+					if (msg) {
+						io.socket.post('/user/chat', {
+							sender: user.email,
+							msg: msg
+						});
+
+						$(event.target).val('');
+					}
+				}
 			});
 		},
 
@@ -65,14 +65,14 @@ define([
 			
 		},
 
-		receiveMessage: function(message) {
-			var currentDate = new Date();
+		receiveChat: function(data) {
+			var createdDate = new Date(data.createdDate);
 			var html = JST['assets/templates/chat_message.ejs']({
-				hour: currentDate.getHours(),
-				minute: ('0' + currentDate.getMinutes()).slice(-2),
-				second: ('0' + currentDate.getSeconds()).slice(-2),
-				username: message.from,
-				message: message.msg
+				hour: createdDate.getHours(),
+				minute: ('0' + createdDate.getMinutes()).slice(-2),
+				second: ('0' + createdDate.getSeconds()).slice(-2),
+				username: data.user,
+				message: data.text
 			});
 
 			var chatBox = $('#chat');
@@ -113,7 +113,7 @@ define([
 		refreshGameState: function(data) {
 			var self = this;
 
-			self.refreshChat();
+			self.refreshChat({ chat: data.chat });
 			self.refreshTiles({ tiles: data.tiles });	
 			self.refreshUserBoard({
 				users: data.users,
@@ -124,11 +124,20 @@ define([
 			self.attachListeners();
 		},
 
-		refreshChat: function() {
+		refreshChat: function(data) {
 			var self = this;
 
+			var chat = data.chat;
 			var chatBox = JST['assets/templates/chat_box.ejs']();
 			$('#chat-container').html(chatBox);
+
+			_.each(data.chat, function(chatMessage) {
+				self.receiveChat({
+					createdDate: chatMessage.createdAt,
+					text: chatMessage.text,
+					user: chatMessage.user.email
+				});
+			});
 		},
 
 		refreshTiles: function(data) {

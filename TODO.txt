@@ -1,8 +1,7 @@
-- fix rendering issue where content briefly flashes before styles are applied
-	- finish moving relevant "view ejs" files to "assets/templates"
-- make "end game" button show when reloading page in a finished game
+- fix login/register pages (do they need to be pages?)
 - how do I use less?
 - track winner, record game histories
 - figure out issue with disallowing forms of words
 - handle room/socket on disconnect
 - why can't I require jquery and sails.io without a script tag?
+- switch DB

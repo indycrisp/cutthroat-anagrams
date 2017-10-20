@@ -6,9 +6,23 @@ module.exports = {
 		var self = this;
 
 		var msg = req.param('msg');
-		User.findUsers({ id: req.session.me }).exec(function(err, user) {
-			GameService.word.guessWord(user, msg);
-			GameService.events.sendChat(user, msg);
+		var user;
+		User.findUsers({ id: req.session.me })
+		.then(function(foundUser) {
+			user = foundUser;
+			return Chathistory.create({
+				text: msg,
+				user: user,
+				game: user.game
+			});
+		})
+		.then(function(chatHistory) {
+			GameService.word.guessWord(user, chatHistory.text);
+			GameService.events.sendChat({
+				user: user,
+				text: chatHistory.text,
+				createdDate: chatHistory.createdAt
+			});
 		});
 	}
 };

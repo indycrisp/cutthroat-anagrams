@@ -78,11 +78,11 @@ module.exports = {
 				tileData.tileIndexes.splice(randIndex, 1);
 				tileData.tileSet.splice(randLetterIndex, 1);
 
-				countdown = 5;
+				countdown = 3;
 			}
 			else {
 				countdown--;
 			}
-		}, 1);
+		}, 1000);
 	}
 };

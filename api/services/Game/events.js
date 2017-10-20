@@ -18,14 +18,15 @@ module.exports = {
 		});
 	},
 
-	sendChat: function(user, msg) {
-		sails.sockets.broadcast(user.room.id, 'chat', {
-			from: user.email,
-			msg: msg
+	sendChat: function(data) {
+		sails.sockets.broadcast(data.user.room.id, 'chat', {
+			user: data.user.email,
+			text: data.text,
+			createdDate: data.createdDate
 		});
 	},
 
-	refreshGameState: function(room, game, tiles, words) {
+	refreshGameState: function(room, game, tiles, words, chat) {
 		var wordsByPlayer = {};
 		words.sort(function(a, b) {
 			return a.id - b.id;
@@ -40,7 +41,8 @@ module.exports = {
 			game: game,
 			users: game.users,
 			tiles: tiles,
-			words: wordsByPlayer
+			words: wordsByPlayer,
+			chat: chat
 		});
 	},
 
