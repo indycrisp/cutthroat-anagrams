@@ -3,7 +3,7 @@ var game = require('./game');
 io.socket.on('connect', function socketConnected(socket) {
 	io.socket.get('/current_user', function(user) {
 		window.user = user;
-		var isGame = $('#game-container').length;
+		var isGame = $('.game-container').length;
 		if (!isGame) return;
 		
 		game.init(user);

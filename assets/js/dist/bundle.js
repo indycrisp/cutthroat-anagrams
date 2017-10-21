@@ -72,7 +72,7 @@ var game = __webpack_require__(1);
 io.socket.on('connect', function socketConnected(socket) {
 	io.socket.get('/current_user', function(user) {
 		window.user = user;
-		var isGame = $('#game-container').length;
+		var isGame = $('.game-container').length;
 		if (!isGame) return;
 		
 		game.init(user);
@@ -171,7 +171,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 				});
 			});
 
-			$('#chat-input').keyup(function(event) {
+			$('.chat-input').keyup(function(event) {
 				if (event.keyCode == 13) {
 					var msg = $(event.target).val();
 					if (msg) {
@@ -188,10 +188,10 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 
 
 		handleResize: function() {
-			var tileContainer = $('#tiles-container');
+			var tileContainer = $('.tiles-container');
 			var tileHeight = tileContainer.height();
 			tileContainer.width(tileHeight);
-			$('#chat-container').width(tileHeight);
+			$('.chat-container').width(tileHeight);
 
 			var bodyWidth = $('body').width();
 			if (!bodyWidth) return;
@@ -206,21 +206,21 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 		receiveChat: function(data) {
 			var createdDate = new Date(data.createdDate);
 			var html = JST['assets/templates/chat_message.ejs']({
-				hour: createdDate.getHours(),
+				hour: ('0' + createdDate.getHours()).slice(-2),
 				minute: ('0' + createdDate.getMinutes()).slice(-2),
 				second: ('0' + createdDate.getSeconds()).slice(-2),
 				username: data.user,
 				message: data.text
 			});
 
-			var chatBox = $('#chat');
+			var chatBox = $('.chat');
 			chatBox.append(html);
 			var chatHeight = chatBox[0].scrollHeight;
 			chatBox.scrollTop(chatHeight);
 		},
 		
 		updateCountdown: function(data) {
-			$('#countdown').html(data.seconds);
+			$('.countdown').html(data.seconds);
 		},
 
 		addTile: function(data) {
@@ -267,7 +267,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 
 			var chat = data.chat;
 			var chatBox = JST['assets/templates/chat_box.ejs']();
-			$('#chat-container').html(chatBox);
+			$('.chat-container').html(chatBox);
 
 			_.each(data.chat, function(chatMessage) {
 				self.receiveChat({
@@ -282,7 +282,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			if (!data.tiles) return;
 
 			var tileTable = JST['assets/templates/tile_table.ejs']();
-			$('#tiles-container').html(tileTable);
+			$('.tiles-container').html(tileTable);
 
 			//TODO: is this overkill? loop through each tile, check if data.tiles has
 			//something.  if it does, use that value, otherwise clear it
@@ -301,10 +301,19 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 		refreshUserBoard: function(data) {
 			if (!data.users || !data.users.length) return;
 
-			var userBoardContainer = JST['assets/templates/user_board.ejs']();
-			$('#users-container').html(userBoardContainer);
+			var userBoardLeftContainer = JST['assets/templates/user_board.ejs']({
+				side: 'left'
+			});
 
-			var usersHTML = '';
+			var userBoardRightContainer = JST['assets/templates/user_board.ejs']({
+				side: 'right'
+			});
+
+			$('.users-container-left').html(userBoardLeftContainer);
+			$('.users-container-right').html(userBoardRightContainer);
+			var usersLeftHTML = '';
+			var usersRightHTML = '';
+			var i=0;
 			_.each(data.users, function(user) {
 				var playerWords = data.words[user.id];
 				if (!playerWords) playerWords = [];
@@ -318,20 +327,30 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 					wordTemplate: JST['assets/templates/word.ejs']
 				});
 
-				usersHTML += newWordContainer;
+				if (i % 2 === 0) {
+					usersLeftHTML += newWordContainer;
+				}
+				else {
+					usersRightHTML += newWordContainer;
+				}
+				i++;
 			});
 
-			$('#users').html(usersHTML);
+			$('.users-left').html(usersLeftHTML);
+			$('.users-right').html(usersRightHTML);
 		},
 
 		refreshMenu: function(data) {
 			if (!data.game) return;
 
-			var menuContent = JST['assets/templates/menu.ejs']({
+			var menuRightContent = JST['assets/templates/menu_right.ejs']({
 				gameCompleted: data.game.completed
 			});
 
-			$('.menu-container').html(menuContent);
+			var menuLeftContent = JST['assets/templates/menu_left.ejs']();
+
+			$('.menu-container-right').html(menuRightContent);
+			$('.menu-container-left').html(menuLeftContent);
 		},
 
 		removeTiles: function(data) {
@@ -411,7 +430,7 @@ exports = module.exports = __webpack_require__(4)(undefined);
 
 
 // module
-exports.push([module.i, "@border-light: #eeeeee;\nhtml {\n\theight: 100%;\n\twidth: 100%;\n}\n\nbody {\n\tmargin-left: 10px;\n\theight: 100%;\n\twidth: 100%;\n}\n\n#game-container {\n\theight: 100%;\n}\n\n#tiles-container {\n\twidth: 100%;\n\theight: 60%;\n\tmin-height: 300px;\n\tfloat: left;\n\tdisplay: inline-block;\n\tmargin-bottom: 10px;\n\tword-wrap: break-word;\n}\n\n#tiles-table {\n\theight: 100%;\n\twidth: 100%;\n\tborder: 1px solid #eeeeee;\n}\n\n.tile-row {\n\theight: 10%;\n}\n\n.tile {\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n.greyed {\n\tbackground-color: #777777;\n}\n\n#chat-container {\n\twidth: 100%;\n\theight: 40%;\n\tmin-height: 300px;\n\tdisplay: inline-block;\n\tfloat: left;\n\tvertical-align: top;\n}\n\n#chat-input {\n\tdisplay: block;\n\twidth: 100%;\n\tmargin-bottom: 5px;\n}\n\n#chat {\n\theight: 200px;\n\twidth: 100%;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n#users-container {\n\twidth: 100%;\n\tdisplay: inline-block;\n\tpadding: 10px;\n\tfloat: left;\n\tborder: 1px solid #eeeeee;\n}\n\n.words-container {\n\tmargin-top: 10px;\n}\n\n#users-title {\n\tfont-weight: bold;\n}\n\n.menu-container {\n\twidth: 100%;\t\n\tpadding: 10px;\n}\n\n.new-game-button-hidden {\n\tdisplay: none;\n}\n\n.column-left {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.column-middle {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 50%;\n\theight: 100%;\n}\n\n.column-right {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n", ""]);
+exports.push([module.i, "@border-light: #eeeeee;\nhtml {\n\theight: 100%;\n\twidth: 100%;\n}\n\nbody {\n\theight: 100%;\n\twidth: 100%;\n}\n\n.game-container {\n\theight: 100%;\n}\n\n.tiles-container {\n\twidth: 100%;\n\theight: 60%;\n\tmin-height: 300px;\n\tfloat: left;\n\tdisplay: inline-block;\n\tmargin-bottom: 10px;\n\tword-wrap: break-word;\n}\n\n.tiles-table {\n\theight: 100%;\n\twidth: 100%;\n\tborder: 1px solid #eeeeee;\n}\n\n.tile-row {\n\theight: 10%;\n}\n\n.tile {\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n.greyed {\n\ttransition: background-color 0.22s;\n\tbackground-color: #777777;\n}\n\n.chat-container {\n\twidth: 100%;\n\theight: 40%;\n\tmin-height: 300px;\n\tdisplay: inline-block;\n\tfloat: left;\n\tvertical-align: top;\n}\n\n.chat-input {\n\tdisplay: block;\n\twidth: 100%;\n\tmargin-bottom: 5px;\n}\n\n.chat {\n\theight: 200px;\n\twidth: 100%;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n.users-container {\n\twidth: 100%;\n\tdisplay: inline-block;\n\tpadding: 10px;\n\tfloat: left;\n\tborder: 1px solid #eeeeee;\n}\n\n.words-container {\n\tmargin-top: 10px;\n}\n\n.menu-container {\n\theight: 35px;\n\twidth: 100%;\t\n}\n\n.new-game-button {\n\theight: 100%;\n\twidth: 100px;\n\ttext-align: center;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-content: center;\n\tflex-direction: column;\n\tfloat: left;\n\tborder: 1px solid #eeeeee;\n\ttransition: color 0.2s ease-out;\n}\n\n.new-game-button:hover {\n\tcursor: pointer;\n\ttransition: color 0.2s ease;\n\tcolor: #00aadf;\n}\n\n.new-game-button-hidden {\n\tdisplay: none;\n}\n\n.column-left {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.column-middle {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 50%;\n\theight: 100%;\n}\n\n.column-right {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.countdown {\n\tdisplay: inline-block;\n\tfloat: right;\n}\n", ""]);
 
 // exports
 

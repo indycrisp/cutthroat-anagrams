@@ -5,16 +5,15 @@ html {
 }
 
 body {
-	margin-left: 10px;
 	height: 100%;
 	width: 100%;
 }
 
-#game-container {
+.game-container {
 	height: 100%;
 }
 
-#tiles-container {
+.tiles-container {
 	width: 100%;
 	height: 60%;
 	min-height: 300px;
@@ -24,7 +23,7 @@ body {
 	word-wrap: break-word;
 }
 
-#tiles-table {
+.tiles-table {
 	height: 100%;
 	width: 100%;
 	border: 1px solid #eeeeee;
@@ -41,10 +40,11 @@ body {
 }
 
 .greyed {
+	transition: background-color 0.22s;
 	background-color: #777777;
 }
 
-#chat-container {
+.chat-container {
 	width: 100%;
 	height: 40%;
 	min-height: 300px;
@@ -53,13 +53,13 @@ body {
 	vertical-align: top;
 }
 
-#chat-input {
+.chat-input {
 	display: block;
 	width: 100%;
 	margin-bottom: 5px;
 }
 
-#chat {
+.chat {
 	height: 200px;
 	width: 100%;
 	overflow-y: scroll;
@@ -71,7 +71,7 @@ body {
 	white-space: pre;
 }
 
-#users-container {
+.users-container {
 	width: 100%;
 	display: inline-block;
 	padding: 10px;
@@ -83,13 +83,28 @@ body {
 	margin-top: 10px;
 }
 
-#users-title {
-	font-weight: bold;
+.menu-container {
+	height: 35px;
+	width: 100%;	
 }
 
-.menu-container {
-	width: 100%;	
-	padding: 10px;
+.new-game-button {
+	height: 100%;
+	width: 100px;
+	text-align: center;
+	display: flex;
+	justify-content: center;
+	align-content: center;
+	flex-direction: column;
+	float: left;
+	border: 1px solid #eeeeee;
+	transition: color 0.2s ease-out;
+}
+
+.new-game-button:hover {
+	cursor: pointer;
+	transition: color 0.2s ease;
+	color: #00aadf;
 }
 
 .new-game-button-hidden {
@@ -115,4 +130,9 @@ body {
 	display: inline-block;
 	width: 25%;
 	height: 100%;
+}
+
+.countdown {
+	display: inline-block;
+	float: right;
 }

@@ -33,7 +33,7 @@ define([
 				});
 			});
 
-			$('#chat-input').keyup(function(event) {
+			$('.chat-input').keyup(function(event) {
 				if (event.keyCode == 13) {
 					var msg = $(event.target).val();
 					if (msg) {
@@ -50,10 +50,10 @@ define([
 
 
 		handleResize: function() {
-			var tileContainer = $('#tiles-container');
+			var tileContainer = $('.tiles-container');
 			var tileHeight = tileContainer.height();
 			tileContainer.width(tileHeight);
-			$('#chat-container').width(tileHeight);
+			$('.chat-container').width(tileHeight);
 
 			var bodyWidth = $('body').width();
 			if (!bodyWidth) return;
@@ -68,21 +68,21 @@ define([
 		receiveChat: function(data) {
 			var createdDate = new Date(data.createdDate);
 			var html = JST['assets/templates/chat_message.ejs']({
-				hour: createdDate.getHours(),
+				hour: ('0' + createdDate.getHours()).slice(-2),
 				minute: ('0' + createdDate.getMinutes()).slice(-2),
 				second: ('0' + createdDate.getSeconds()).slice(-2),
 				username: data.user,
 				message: data.text
 			});
 
-			var chatBox = $('#chat');
+			var chatBox = $('.chat');
 			chatBox.append(html);
 			var chatHeight = chatBox[0].scrollHeight;
 			chatBox.scrollTop(chatHeight);
 		},
 		
 		updateCountdown: function(data) {
-			$('#countdown').html(data.seconds);
+			$('.countdown').html(data.seconds);
 		},
 
 		addTile: function(data) {
@@ -129,7 +129,7 @@ define([
 
 			var chat = data.chat;
 			var chatBox = JST['assets/templates/chat_box.ejs']();
-			$('#chat-container').html(chatBox);
+			$('.chat-container').html(chatBox);
 
 			_.each(data.chat, function(chatMessage) {
 				self.receiveChat({
@@ -144,7 +144,7 @@ define([
 			if (!data.tiles) return;
 
 			var tileTable = JST['assets/templates/tile_table.ejs']();
-			$('#tiles-container').html(tileTable);
+			$('.tiles-container').html(tileTable);
 
 			//TODO: is this overkill? loop through each tile, check if data.tiles has
 			//something.  if it does, use that value, otherwise clear it
@@ -163,10 +163,19 @@ define([
 		refreshUserBoard: function(data) {
 			if (!data.users || !data.users.length) return;
 
-			var userBoardContainer = JST['assets/templates/user_board.ejs']();
-			$('#users-container').html(userBoardContainer);
+			var userBoardLeftContainer = JST['assets/templates/user_board.ejs']({
+				side: 'left'
+			});
 
-			var usersHTML = '';
+			var userBoardRightContainer = JST['assets/templates/user_board.ejs']({
+				side: 'right'
+			});
+
+			$('.users-container-left').html(userBoardLeftContainer);
+			$('.users-container-right').html(userBoardRightContainer);
+			var usersLeftHTML = '';
+			var usersRightHTML = '';
+			var i=0;
 			_.each(data.users, function(user) {
 				var playerWords = data.words[user.id];
 				if (!playerWords) playerWords = [];
@@ -180,20 +189,30 @@ define([
 					wordTemplate: JST['assets/templates/word.ejs']
 				});
 
-				usersHTML += newWordContainer;
+				if (i % 2 === 0) {
+					usersLeftHTML += newWordContainer;
+				}
+				else {
+					usersRightHTML += newWordContainer;
+				}
+				i++;
 			});
 
-			$('#users').html(usersHTML);
+			$('.users-left').html(usersLeftHTML);
+			$('.users-right').html(usersRightHTML);
 		},
 
 		refreshMenu: function(data) {
 			if (!data.game) return;
 
-			var menuContent = JST['assets/templates/menu.ejs']({
+			var menuRightContent = JST['assets/templates/menu_right.ejs']({
 				gameCompleted: data.game.completed
 			});
 
-			$('.menu-container').html(menuContent);
+			var menuLeftContent = JST['assets/templates/menu_left.ejs']();
+
+			$('.menu-container-right').html(menuRightContent);
+			$('.menu-container-left').html(menuLeftContent);
 		},
 
 		removeTiles: function(data) {

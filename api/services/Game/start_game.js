@@ -83,6 +83,6 @@ module.exports = {
 			else {
 				countdown--;
 			}
-		}, 1000);
+		}, 1);
 	}
 };
