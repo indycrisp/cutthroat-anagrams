@@ -1,14 +1,14 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
+var PLAYERS_PER_GAME = 2;
 module.exports = {
 	connectToGame: function(req, res) {
 		var self = this;
 
-		var username = req.session.username;
 		return Promise.all([
-			User.findUsers({ email: username }),
-			Game.findGames({ count: { '<': 2 } })
+			User.findUsers({ id: req.session.me }),
+			Game.findGames({ count: { '<': PLAYERS_PER_GAME } })
 		]).spread(function(
 			user,
 			joinableGames
@@ -25,7 +25,7 @@ module.exports = {
 				var gameToJoin = joinableGames[0];
 				return self.joinExistingGame(user, gameToJoin)
 				.then(function(updatedUser) {
-					if (updatedUser.game.count === 2) {
+					if (updatedUser.game.count === PLAYERS_PER_GAME) {
 						GameService.start_game.startGame(gameToJoin, updatedUser.room);
 					}
 

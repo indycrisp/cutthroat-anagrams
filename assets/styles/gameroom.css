@@ -72,11 +72,25 @@ body {
 }
 
 .users-container {
+	height: 100%;
 	width: 100%;
 	display: inline-block;
 	padding: 10px;
 	float: left;
+}
+
+.users {
+	height: 100%;
+}
+
+.users-right {
+	text-align: right;
+}
+
+.user-word-container {
 	border: 1px solid #eeeeee;
+	height: 50%;
+	padding: 5px;
 }
 
 .words-container {
@@ -88,7 +102,7 @@ body {
 	width: 100%;	
 }
 
-.new-game-button {
+.menu-button {
 	height: 100%;
 	width: 100px;
 	text-align: center;
@@ -96,18 +110,31 @@ body {
 	justify-content: center;
 	align-content: center;
 	flex-direction: column;
-	float: left;
 	border: 1px solid #eeeeee;
-	transition: color 0.2s ease-out;
+	transition: color 0.2s ease-out, border 0.2s ease-out;
 }
 
-.new-game-button:hover {
+.menu-button:hover {
 	cursor: pointer;
-	transition: color 0.2s ease;
+	transition: color 0.2s ease, border 0.2s ease;
 	color: #00aadf;
+	border: 1px solid #00aadf;
 }
 
-.new-game-button-hidden {
+.menu-button:active {
+	color: #a8c9e4;
+	border: 1px solid #a8c9e4;
+}
+
+.new-game-button {
+	float: left;
+}
+
+.logout-button {
+	float: right;
+}
+
+.menu-button-hidden {
 	display: none;
 }
 

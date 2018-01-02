@@ -9,6 +9,11 @@ module.exports = {
 	attributes: {
 		email: {
 			type: 'email',
+			//required: true,
+			//unique: true
+		},
+		username: {
+			type: 'string',
 			required: true,
 			unique: true
 		},
@@ -34,7 +39,7 @@ module.exports = {
 		var self = this;
 
 		var findFunction;
-		if (args.id || args.email) {
+		if (args.id || args.email || args.username) {
 			findFunction = User.findOne(args);
 		}
 		else {
@@ -49,11 +54,11 @@ module.exports = {
 	},
 
 	attemptRegister: function(user, cb) {
-		User.findOne({ email: user.email }).exec(cb);
+		User.findOne({ username: user.username }).exec(cb);
 	},
 	
 	attemptLogin: function(user, cb) {
-		User.findOne({ email: user.email }).exec(cb);
+		User.findOne({ username: user.username }).exec(cb);
 	}
 };
 

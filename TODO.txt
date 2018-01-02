@@ -1,4 +1,9 @@
 - fix login/register pages (do they need to be pages?)
+	- get rid of extraneous routes in config/routes
+	- make sure all of the validation works for register/login
+		- add invalid style to fields
+		- show error message
+	-implement logout and test logging in and out
 - how do I use less?
 - track winner, record game histories
 - figure out issue with disallowing forms of words

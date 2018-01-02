@@ -1,12 +1,15 @@
 var game = require('./game');
+var login = require('./login');
 
 io.socket.on('connect', function socketConnected(socket) {
 	io.socket.get('/current_user', function(user) {
-		window.user = user;
-		var isGame = $('.game-container').length;
-		if (!isGame) return;
-		
-		game.init(user);
+		if (user && user.id) {
+			game.init(user);
+		}
+		else {
+			game.refreshGameState();
+			login.init();
+		}
 
 		io.socket.on('chat', function messageReceived(data) {
 			game.receiveChat(data);

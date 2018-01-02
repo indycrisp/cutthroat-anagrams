@@ -2,23 +2,52 @@ module.exports = function login(args) {
 	var req = this.req;
 	var res = this.res;
 
-	User.attemptLogin({ email: args.email }, function(err, user) {
+	User.attemptLogin({ username: args.username }, function(err, user) {
 		if (err) return res.negotiate(err);
 
-		if (!user) {
-			return res.view(args.invalidView, { err: 'User does not exist' });
+		var errors = [];
+		if (!args.username) {
+			errors.push({
+				errorType: 'USERNAME',
+				errorMessage: ''
+			});
+
+			errors.push({
+				errorType: 'PASSWORD',
+				errorMessage: ''
+			});
+		}
+		else if (!user) {
+			errors.push({
+				errorType: 'USERNAME',
+				errorMessage: "User doesn't exist"
+			});
 		}
 
-		req.session.me = user.id;
-		req.session.username = user.email;
+		if (errors.length) {
+			return res.ok({
+				errors: errors
+			});
+		}
 
 		var password = args.password;
 		var hasher = require("password-hash");
 		if (hasher.verify(password, user.password)) {
+			req.session.me = user.id;
+			req.session.username = user.username;
 			return res.redirect(args.successRedirect);
 		}
 		else {
-			return res.view(args.invalidView, { err: 'Invalid password' });
+			errors.push({
+				errorType: 'PASSWORD',
+				errorMessage: "Incorrect password"
+			});
+		}
+
+		if (errors.length) {
+			return res.ok({
+				errors: errors
+			});
 		}
 	});
 };

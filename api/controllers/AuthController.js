@@ -5,6 +5,7 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
+var passport = require('passport');
 module.exports = {
 	_config: {
 		actions: false,
@@ -15,16 +16,14 @@ module.exports = {
 
 	register: function(req, res) {
 		return res.register({
-			email: req.param('email'),
-			password: req.param('password'),
-			successRedirect: '/game',
-			invalidView: 'register'
+			username: req.param('username'),
+			password: req.param('password')
 		});
 	},
 
 	login: function(req, res) {
 		return res.login({
-			email: req.param('email'),
+			username: req.param('username'),
 			password: req.param('password'),
 			successRedirect: '/game',
 			invalidView: 'login'
@@ -32,8 +31,11 @@ module.exports = {
 	},
 
 	logout: function(req, res) {
-		req.logout();
-		res.redirect('/');
+		var self = this;
+
+		req.session.destroy(function(err) {
+			res.ok({ success: 1 });
+		});
 	},
 
 	viewRegister: function(req, res) {
@@ -46,6 +48,13 @@ module.exports = {
 	viewLogin: function(req, res) {
 		res.view('login.ejs', {
 			title: 'Login',
+			err: ''
+		});
+	},
+
+	viewGame: function(req, res) {
+		res.view('game.ejs', {
+			title: 'cutthroat',
 			err: ''
 		});
 	}

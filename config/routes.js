@@ -21,17 +21,15 @@
  */
 
 module.exports.routes = {
-	'/': {
-		view: 'login'
-	},
+	'get /': 'AuthController.viewGame',
 	
-	'get /login': 'AuthController.viewLogin',
+	'get /login': 'AuthController.viewGame',
 
 	'post /login': 'AuthController.login',
 
-	'/logout': 'AuthController.logout',
+	'post /logout': 'AuthController.logout',
 
-	'get /register': 'AuthController.viewRegister',
+	'get /register': 'AuthController.viewGame',
 	
 	'post /register': 'AuthController.register',
 

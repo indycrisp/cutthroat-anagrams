@@ -20,7 +20,7 @@ module.exports = {
 
 	sendChat: function(data) {
 		sails.sockets.broadcast(data.user.room.id, 'chat', {
-			user: data.user.email,
+			user: data.user.username,
 			text: data.text,
 			createdDate: data.createdDate
 		});

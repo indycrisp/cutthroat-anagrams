@@ -68,14 +68,17 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 var game = __webpack_require__(1);
+var login = __webpack_require__(10);
 
 io.socket.on('connect', function socketConnected(socket) {
 	io.socket.get('/current_user', function(user) {
-		window.user = user;
-		var isGame = $('.game-container').length;
-		if (!isGame) return;
-		
-		game.init(user);
+		if (user && user.id) {
+			game.init(user);
+		}
+		else {
+			game.refreshGameState();
+			login.init();
+		}
 
 		io.socket.on('chat', function messageReceived(data) {
 			game.receiveChat(data);
@@ -166,8 +169,18 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			});
 
 			$('.new-game-button').off('click').click(function() {
-				io.socket.post('/user/leaveGame', { userId: user.id }, function(err) {
-					io.socket.post('/user/join', { userId: user.id });	
+				io.socket.post('/user/leaveGame', { userId: self.user.id }, function(err) {
+					io.socket.post('/user/join', { userId: self.user.id });	
+				});
+			});
+
+			$('.logout-button').off('click').click(function() {
+				var userId = self.user.id;
+				self.user = undefined;
+				io.socket.post('/logout', { userId: userId }, function(data) {
+					if (data && data.success) {
+						document.location.reload();
+					}
 				});
 			});
 
@@ -176,7 +189,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 					var msg = $(event.target).val();
 					if (msg) {
 						io.socket.post('/user/chat', {
-							sender: user.email,
+							sender: self.user.username,
 							msg: msg
 						});
 
@@ -251,14 +264,14 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 		refreshGameState: function(data) {
 			var self = this;
 
-			self.refreshChat({ chat: data.chat });
-			self.refreshTiles({ tiles: data.tiles });	
+			self.refreshChat({ chat: data ? data.chat : []  });
+			self.refreshTiles({ tiles: data ? data.tiles : [] });	
 			self.refreshUserBoard({
-				users: data.users,
-				words: data.words
+				users: data ? data.users : [],
+				words: data ? data.words : []
 			});
 
-			self.refreshMenu({ game: data.game });
+			self.refreshMenu({ game: data ? data.game : [] });
 			self.attachListeners();
 		},
 
@@ -273,7 +286,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 				self.receiveChat({
 					createdDate: chatMessage.createdAt,
 					text: chatMessage.text,
-					user: chatMessage.user.email
+					user: chatMessage.user.username
 				});
 			});
 		},
@@ -320,7 +333,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 
 				var wordContainer = $('#user-word-container-' + user.id);
 				var newWordContainer = JST['assets/templates/word_container.ejs']({
-					username: user.email,
+					username: user.username,
 					userId: user.id,
 					userStatus: user.room ? 'connected' : 'disconnected',
 					words: playerWords,
@@ -341,7 +354,9 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 		},
 
 		refreshMenu: function(data) {
-			if (!data.game) return;
+			var self = this;
+
+			if (!data.game || !self.user) return;
 
 			var menuRightContent = JST['assets/templates/menu_right.ejs']({
 				gameCompleted: data.game.completed
@@ -383,7 +398,7 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 		},
 
 		endGame: function(data) {
-			$('.new-game-button').removeClass('new-game-button-hidden');
+			$('.new-game-button').removeClass('menu-button-hidden');
 		}
 	};
 }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
@@ -430,7 +445,7 @@ exports = module.exports = __webpack_require__(4)(undefined);
 
 
 // module
-exports.push([module.i, "@border-light: #eeeeee;\nhtml {\n\theight: 100%;\n\twidth: 100%;\n}\n\nbody {\n\theight: 100%;\n\twidth: 100%;\n}\n\n.game-container {\n\theight: 100%;\n}\n\n.tiles-container {\n\twidth: 100%;\n\theight: 60%;\n\tmin-height: 300px;\n\tfloat: left;\n\tdisplay: inline-block;\n\tmargin-bottom: 10px;\n\tword-wrap: break-word;\n}\n\n.tiles-table {\n\theight: 100%;\n\twidth: 100%;\n\tborder: 1px solid #eeeeee;\n}\n\n.tile-row {\n\theight: 10%;\n}\n\n.tile {\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n.greyed {\n\ttransition: background-color 0.22s;\n\tbackground-color: #777777;\n}\n\n.chat-container {\n\twidth: 100%;\n\theight: 40%;\n\tmin-height: 300px;\n\tdisplay: inline-block;\n\tfloat: left;\n\tvertical-align: top;\n}\n\n.chat-input {\n\tdisplay: block;\n\twidth: 100%;\n\tmargin-bottom: 5px;\n}\n\n.chat {\n\theight: 200px;\n\twidth: 100%;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n.users-container {\n\twidth: 100%;\n\tdisplay: inline-block;\n\tpadding: 10px;\n\tfloat: left;\n\tborder: 1px solid #eeeeee;\n}\n\n.words-container {\n\tmargin-top: 10px;\n}\n\n.menu-container {\n\theight: 35px;\n\twidth: 100%;\t\n}\n\n.new-game-button {\n\theight: 100%;\n\twidth: 100px;\n\ttext-align: center;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-content: center;\n\tflex-direction: column;\n\tfloat: left;\n\tborder: 1px solid #eeeeee;\n\ttransition: color 0.2s ease-out;\n}\n\n.new-game-button:hover {\n\tcursor: pointer;\n\ttransition: color 0.2s ease;\n\tcolor: #00aadf;\n}\n\n.new-game-button-hidden {\n\tdisplay: none;\n}\n\n.column-left {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.column-middle {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 50%;\n\theight: 100%;\n}\n\n.column-right {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.countdown {\n\tdisplay: inline-block;\n\tfloat: right;\n}\n", ""]);
+exports.push([module.i, "@border-light: #eeeeee;\nhtml {\n\theight: 100%;\n\twidth: 100%;\n}\n\nbody {\n\theight: 100%;\n\twidth: 100%;\n}\n\n.game-container {\n\theight: 100%;\n}\n\n.tiles-container {\n\twidth: 100%;\n\theight: 60%;\n\tmin-height: 300px;\n\tfloat: left;\n\tdisplay: inline-block;\n\tmargin-bottom: 10px;\n\tword-wrap: break-word;\n}\n\n.tiles-table {\n\theight: 100%;\n\twidth: 100%;\n\tborder: 1px solid #eeeeee;\n}\n\n.tile-row {\n\theight: 10%;\n}\n\n.tile {\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n.greyed {\n\ttransition: background-color 0.22s;\n\tbackground-color: #777777;\n}\n\n.chat-container {\n\twidth: 100%;\n\theight: 40%;\n\tmin-height: 300px;\n\tdisplay: inline-block;\n\tfloat: left;\n\tvertical-align: top;\n}\n\n.chat-input {\n\tdisplay: block;\n\twidth: 100%;\n\tmargin-bottom: 5px;\n}\n\n.chat {\n\theight: 200px;\n\twidth: 100%;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n.users-container {\n\theight: 100%;\n\twidth: 100%;\n\tdisplay: inline-block;\n\tpadding: 10px;\n\tfloat: left;\n}\n\n.users {\n\theight: 100%;\n}\n\n.users-right {\n\ttext-align: right;\n}\n\n.user-word-container {\n\tborder: 1px solid #eeeeee;\n\theight: 50%;\n\tpadding: 5px;\n}\n\n.words-container {\n\tmargin-top: 10px;\n}\n\n.menu-container {\n\theight: 35px;\n\twidth: 100%;\t\n}\n\n.menu-button {\n\theight: 100%;\n\twidth: 100px;\n\ttext-align: center;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-content: center;\n\tflex-direction: column;\n\tborder: 1px solid #eeeeee;\n\ttransition: color 0.2s ease-out, border 0.2s ease-out;\n}\n\n.menu-button:hover {\n\tcursor: pointer;\n\ttransition: color 0.2s ease, border 0.2s ease;\n\tcolor: #00aadf;\n\tborder: 1px solid #00aadf;\n}\n\n.menu-button:active {\n\tcolor: #a8c9e4;\n\tborder: 1px solid #a8c9e4;\n}\n\n.new-game-button {\n\tfloat: left;\n}\n\n.logout-button {\n\tfloat: right;\n}\n\n.menu-button-hidden {\n\tdisplay: none;\n}\n\n.column-left {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.column-middle {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 50%;\n\theight: 100%;\n}\n\n.column-right {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.countdown {\n\tdisplay: inline-block;\n\tfloat: right;\n}\n", ""]);
 
 // exports
 
@@ -18116,6 +18131,177 @@ module.exports = function(module) {
 	}
 	return module;
 };
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
+	__webpack_require__(11),
+	__webpack_require__(7),
+	__webpack_require__(1)
+], __WEBPACK_AMD_DEFINE_RESULT__ = function(
+	gamestyles,
+	_,
+	game
+) {
+	return {
+		init: function() {
+			var self = this;
+
+			if ($('.lightbox').length) return;
+
+			var loginTemplate = JST['assets/templates/login/login.ejs'];
+			//var registerTemplate = JST['assets/templates/login/register.ejs'];
+
+			var lightboxHTML = JST['assets/templates/login/lightbox.ejs']({
+				contentTemplate: loginTemplate
+			});
+
+			$('body').append(lightboxHTML);
+
+			self.attachListeners();
+		},
+
+		attachListeners: function() {
+			var self = this;
+
+			$('input').off('enterKey').bind('enterKey', function(event) {
+				var authContainer = $(event.target).closest('.auth-container');
+				if (authContainer.hasClass('login-container')) {
+					self.submit('login');
+				}
+				else if (authContainer.hasClass('register-container')) {
+					self.submit('register');
+				}
+			});
+
+			$('input').off('focus').bind('focus', function(event) {
+				$(event.target).removeClass('invalid-input');
+			});
+
+			$('.login-button').off('click').click(function() {
+				self.submit('login');
+			});
+
+			$('.register-button').off('click').click(function() {
+				self.submit('register');
+			});
+
+			$('.switch-to-register-button').off('click').click(function() {
+				var registerTemplate = JST['assets/templates/login/register.ejs'];
+				$('.auth-container').replaceWith(registerTemplate);
+				self.attachListeners();
+			});
+
+			$('.switch-to-login-button').off('click').click(function() {
+				var loginTemplate = JST['assets/templates/login/login.ejs'];
+				$('.auth-container').replaceWith(loginTemplate);
+				self.attachListeners();
+			});
+		},
+
+		submit: function(type) {
+			var self = this;
+
+			var usernameField = $('.' + type + '-username');
+			var passwordField = $('.' + type + '-password');
+			usernameField.removeClass('invalid-input');
+			passwordField.removeClass('invalid-input');
+			usernameField.next().html('');
+			passwordField.next().html('');
+
+			io.socket.post('/' + type, {
+				username: usernameField.val(),
+				password: passwordField.val()
+			}, function(data) {
+				if (data.errors && data.errors.length) {
+					self.handleValidationErrors({
+						errors: data.errors,
+						type: type
+					});
+				}
+				else {
+					$('.lightbox').remove();
+					game.init(data);
+				}
+			});
+		},
+
+		handleValidationErrors: function(data) {
+			var self = this;
+
+			_.each(data.errors, function(error) {
+				var errorTemplate = JST['assets/templates/login/validation_error.ejs']({
+					message: error.errorMessage
+				});
+
+				switch (error.errorType) {
+					case 'USERNAME':
+						var usernameField = $('.' + data.type + '-username');
+						usernameField.addClass('invalid-input');
+						var errorContainer = usernameField.next();
+						$(errorContainer).html(errorTemplate);
+						break;
+					case 'PASSWORD':
+						var passwordField = $('.' + data.type + '-password');
+						passwordField.addClass('invalid-input');
+						var errorContainer = passwordField.next();
+						$(errorContainer).html(errorTemplate);
+						break;
+					default:
+				}
+			});
+		}
+	};
+}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(12);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__(5)(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../../node_modules/css-loader/index.js!./login.css", function() {
+			var newContent = require("!!../../node_modules/css-loader/index.js!./login.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(4)(undefined);
+// imports
+
+
+// module
+exports.push([module.i, ".lightbox {\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: center;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\twidth: 100%;\n\theight: 100%;\n\tbackground-color: rgba(0, 0, 0, 0.4);\n}\n\n.lightbox-content {\n\tbox-shadow: 0 0 25px #111;\n\tborder-radius: 5px;\n\twidth: 30%;\n\theight: 40%;\n\tmin-width: 400px;\n\tmin-height: 250px;\n\tpadding: 20px;\n\tbackground-color: #ffffff;\n}\n\n.register-container, .login-container {\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: flex-start;\n\theight: 100%;\n}\n\n.header-row {\n\tfont-size: 22px;\n\tcolor: #555;\n}\n\n.auth-title {\n\twidth: 80px;\n\tdisplay: inline-flex;\n}\n\nlabel {\n\tpadding-top: 10px;\n\tcolor: #555;\n\tdisplay: inline-block;\n}\n\ninput[type=text], input[type=password] {\n\tpadding-left: 5px;\n\twidth: 100%;\n\tborder: 1px solid #c7d0d2;\n\tborder-radius: 3px;\n\ttransition: box-shadow 0.2s ease-out;\n}\n\ninput[type=text]:hover, input[type=password]:hover {\n\tborder: 1px solid #b6bfc0;\n\tbox-shadow: inset 0 1.5px 3px rgba(190, 190, 190, .7), 0 0 0 3px #f5f7f8;\n}\n\ninput[type=text]:focus, input[type=password]:focus {\n\tborder: 1px solid #a8c9e4;\n\tbox-shadow: inset 0 1.5px 3px rgba(190, 190, 190, .4), 0 0 0 3px #e6f2f9;\n}\n\n.invalid-input {\n\ttransition: box-shadow 0.2s ease;\n\tbox-shadow: 0 0 3px #CC0000;\n}\n\n.button-row {\n\tdisplay: flex;\n\twidth: 100%;\n\theight: 100%;\n\tflex-grow: 1;\n}\n\n.auth-button {\n\ttransition: color 0.2s ease-out, border 0.2s ease-out;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-content: center;\n\tflex-direction: column;\n\ttext-align: center;\n\tborder-radius: 3px;\n\tborder: 1px solid #c7d0d2;\n}\n\n.register-button, .login-button {\n\talign-self: flex-end;\n\tmargin-left: auto;\n\theight: 40px;\n\twidth: 100%;\n}\n\n.switch-to-register-button, .switch-to-login-button {\n\tdisplay: inline-flex;\n\tfloat: right;\n\theight: 40px;\n\twidth: 80px;\n\tfont-size: 14px;\n}\n\n.auth-button:hover {\n\tcursor: pointer;\n\ttransition: color 0.2s ease, border 0.2s ease;\n\tcolor: #00aadf;\n\tborder: 1px solid #00aadf;\n}\n\n.auth-button:active {\n\tcolor: #a8c9e4;\n\tborder: 1px solid #a8c9e4;\n}\n\n.validation-error-container {\n\theight: 10px;\n\twidth: 100%;\n}\n\n.validation-error {\n\theight: 100%;\n\tfont-size: 10px;\n}\n", ""]);
+
+// exports
 
 
 /***/ })

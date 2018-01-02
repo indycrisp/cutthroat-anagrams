@@ -28,8 +28,18 @@ define([
 			});
 
 			$('.new-game-button').off('click').click(function() {
-				io.socket.post('/user/leaveGame', { userId: user.id }, function(err) {
-					io.socket.post('/user/join', { userId: user.id });	
+				io.socket.post('/user/leaveGame', { userId: self.user.id }, function(err) {
+					io.socket.post('/user/join', { userId: self.user.id });	
+				});
+			});
+
+			$('.logout-button').off('click').click(function() {
+				var userId = self.user.id;
+				self.user = undefined;
+				io.socket.post('/logout', { userId: userId }, function(data) {
+					if (data && data.success) {
+						document.location.reload();
+					}
 				});
 			});
 
@@ -38,7 +48,7 @@ define([
 					var msg = $(event.target).val();
 					if (msg) {
 						io.socket.post('/user/chat', {
-							sender: user.email,
+							sender: self.user.username,
 							msg: msg
 						});
 
@@ -113,14 +123,14 @@ define([
 		refreshGameState: function(data) {
 			var self = this;
 
-			self.refreshChat({ chat: data.chat });
-			self.refreshTiles({ tiles: data.tiles });	
+			self.refreshChat({ chat: data ? data.chat : []  });
+			self.refreshTiles({ tiles: data ? data.tiles : [] });	
 			self.refreshUserBoard({
-				users: data.users,
-				words: data.words
+				users: data ? data.users : [],
+				words: data ? data.words : []
 			});
 
-			self.refreshMenu({ game: data.game });
+			self.refreshMenu({ game: data ? data.game : [] });
 			self.attachListeners();
 		},
 
@@ -135,7 +145,7 @@ define([
 				self.receiveChat({
 					createdDate: chatMessage.createdAt,
 					text: chatMessage.text,
-					user: chatMessage.user.email
+					user: chatMessage.user.username
 				});
 			});
 		},
@@ -182,7 +192,7 @@ define([
 
 				var wordContainer = $('#user-word-container-' + user.id);
 				var newWordContainer = JST['assets/templates/word_container.ejs']({
-					username: user.email,
+					username: user.username,
 					userId: user.id,
 					userStatus: user.room ? 'connected' : 'disconnected',
 					words: playerWords,
@@ -203,7 +213,9 @@ define([
 		},
 
 		refreshMenu: function(data) {
-			if (!data.game) return;
+			var self = this;
+
+			if (!data.game || !self.user) return;
 
 			var menuRightContent = JST['assets/templates/menu_right.ejs']({
 				gameCompleted: data.game.completed
@@ -245,7 +257,7 @@ define([
 		},
 
 		endGame: function(data) {
-			$('.new-game-button').removeClass('new-game-button-hidden');
+			$('.new-game-button').removeClass('menu-button-hidden');
 		}
 	};
 });

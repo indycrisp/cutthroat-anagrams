@@ -5,7 +5,7 @@ module.exports = {
 	
 	// Add a user to a room, then return the updated user model
 	joinRoom: function(user, roomId) {
-		return User.update({ email: user.email }, { room: roomId })
+		return User.update({ id: user.id }, { room: roomId })
 		.then(function(users) {
 			return User.findUsers({ id: user.id });
 		});
