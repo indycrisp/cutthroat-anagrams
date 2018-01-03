@@ -101,13 +101,12 @@ input[type=text]:focus, input[type=password]:focus {
 
 .switch:hover {
 	cursor: pointer;
-	transition: color 0.2s ease, border 0.2s ease;
+	transition: color 0.2s ease;
 	color: #00aadf;
 }
 
 .switch:active {
 	color: #a8c9e4;
-	border: 1px solid #a8c9e4;
 }
 
 .auth-button:hover {
@@ -119,7 +118,7 @@ input[type=text]:focus, input[type=password]:focus {
 
 .auth-button:active {
 	color: #a8c9e4;
-	border: 1px solid #a8c9e4;
+	//border: 1px solid #a8c9e4;
 }
 
 .validation-error-container {
