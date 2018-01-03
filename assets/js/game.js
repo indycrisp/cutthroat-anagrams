@@ -92,9 +92,9 @@ define([
 			});
 
 			var chatBox = $('.chat');
-			chatBox.prepend(html);
-			//var chatHeight = chatBox[0].scrollHeight;
-			chatBox.scrollTop(0);
+			chatBox.append(html);
+			var chatHeight = chatBox[0].scrollHeight;
+			chatBox.scrollTop(chatHeight);
 		},
 		
 		updateCountdown: function(data) {
