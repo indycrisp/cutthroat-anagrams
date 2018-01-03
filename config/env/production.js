@@ -11,6 +11,9 @@
  */
 
 module.exports = {
+	session: {
+		adapter: 'redis'
+	},
 
 	/***************************************************************************
 	* Set the default database connection for models in the production        *
