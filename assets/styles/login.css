@@ -14,6 +14,7 @@
 .lightbox-content {
 	box-shadow: 0 0 25px #111;
 	border-radius: 5px;
+	#width: 400px;
 	width: 400px;
 	min-height: 250px;
 	padding: 20px;
