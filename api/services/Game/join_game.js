@@ -2,6 +2,11 @@ var _ = require('lodash');
 var Promise = require('bluebird');
 
 var PLAYERS_PER_GAME = 2;
+var PLAYER_COLOR_MAP = {
+	1: 'red',
+	2: 'blue'
+};
+
 module.exports = {
 	connectToGame: function(req, res) {
 		var self = this;
@@ -75,12 +80,15 @@ module.exports = {
 	addUserToGame: function(user, game) {
 		var self = this;
 
+		var gameCount = 0;
 		return Game.update({ id: game.id }, { count: game.count + 1 })
 		.then(function(updatedGames) {
+			gameCount = updatedGames[0].count;
 			return User.update({ id: user.id }, { game: updatedGames[0].id });
 		})
 		.then(function(users) {
-			return Usergamehistory.create({ user: user, game: game });
+			var userColor = PLAYER_COLOR_MAP[gameCount];
+			return Usergame.create({ user: user, game: game, color: userColor });
 		})
 		.then(function(history) {
 			return User.findUsers({ id: user.id });

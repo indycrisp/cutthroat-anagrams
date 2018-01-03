@@ -6,7 +6,7 @@
   "keywords": [],
   "dependencies": {
     "bcrypt": "^1.0.2",
-    "bluebird": "^3.5.0",
+    "bluebird": "^3.5.1",
     "check-word": "^1.1.0",
     "css-loader": "^0.28.4",
     "ejs": "2.3.4",
@@ -27,6 +27,7 @@
     "handlebars": "^4.0.10",
     "include-all": "^1.0.0",
     "jquery": "^3.2.1",
+    "jquery-color": "^1.0.0",
     "less-loader": "^4.0.4",
     "lodash": "^4.17.4",
     "passport": "^0.3.2",
@@ -39,6 +40,7 @@
     "style-loader": "^0.18.2",
     "swig": "^1.4.2",
     "swig-loader": "^2.1.0",
+    "velocity-animate": "^1.5.0",
     "webpack-swig-loader": "^0.2.0"
   },
   "scripts": {

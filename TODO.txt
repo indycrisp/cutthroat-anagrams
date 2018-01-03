@@ -1,3 +1,4 @@
+- align word containers so that words are closest to the board
 - fix login/register pages (do they need to be pages?)
 	- get rid of extraneous routes in config/routes
 	- make sure all of the validation works for register/login

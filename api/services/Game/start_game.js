@@ -51,11 +51,11 @@ module.exports = {
 			}
 
 			sails.sockets.broadcast(room.id, 'updateCountdown', {
-				seconds: countdown
+				seconds: countdown.toFixed(2)
 			});
 
 			if (gameEnding) {
-				countdown--;
+				countdown = Math.round((countdown - 0.01) * 100) / 100;
 				return;
 			}
 
@@ -81,8 +81,8 @@ module.exports = {
 				countdown = 3;
 			}
 			else {
-				countdown--;
+				countdown = Math.round((countdown - 0.01) * 100) / 100;
 			}
-		}, 1);
+		}, 10);
 	}
 };

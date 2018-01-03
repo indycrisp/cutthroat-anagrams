@@ -34,16 +34,18 @@ module.exports = {
 				Game.findGames({ id: updatedUser.game.id }),
 				Gametile.find({ game: updatedUser.game.id }),
 				Gameword.find({ game: updatedUser.game.id }),
-				Chathistory.findChatHistory({ game: updatedUser.game.id })
+				Chathistory.findChatHistory({ game: updatedUser.game.id }),
+				Usergame.findUserGames({ game: updatedUser.game.id })
 			]).spread(function(
 				room,
 				game,
 				tiles,
 				words,
-				chat
+				chat,
+				userGames
 			) {
 				return sails.sockets.join(req, room.id, function(err) {
-					GameService.events.refreshGameState(room, game, tiles, words, chat);
+					GameService.events.refreshGameState(room, game, tiles, words, chat, userGames);
 					res.ok();
 				});
 			});

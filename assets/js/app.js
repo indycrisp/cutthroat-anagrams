@@ -51,10 +51,6 @@ io.socket.on('connect', function socketConnected(socket) {
 			game.addWordToPlayer(data);
 		});
 
-		io.socket.on('removeWordsFromPlayers', function(data) {
-			game.removeWordsFromPlayers(data);
-		});
-
 		io.socket.on('message', function(data) {
 		});
 

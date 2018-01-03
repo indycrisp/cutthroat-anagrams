@@ -60,934 +60,11 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var game = __webpack_require__(1);
-var login = __webpack_require__(10);
-
-io.socket.on('connect', function socketConnected(socket) {
-	io.socket.get('/current_user', function(user) {
-		if (user && user.id) {
-			game.init(user);
-		}
-		else {
-			game.refreshGameState();
-			login.init();
-		}
-
-		io.socket.on('chat', function messageReceived(data) {
-			game.receiveChat(data);
-		});
-
-		io.socket.on('userDisconnect', function(data) {
-			game.userDisconnect(data);
-		});
-
-		io.socket.on('userLeave', function(data) {
-			game.userLeave(data);
-		});
-
-		io.socket.on('updateCountdown', function(data) {
-			game.updateCountdown(data);
-		});
-
-		io.socket.on('addTile', function(data) {
-			game.addTile(data);
-		});
-
-		io.socket.on('refreshGameState', function(data) {
-			game.refreshGameState(data);
-		});
-
-		io.socket.on('refreshTiles', function(data) {
-			game.refreshTiles(data);
-		});
-
-		io.socket.on('refreshPlayerWords', function(data) {
-			game.refreshPlayerWords(data);
-		});
-
-		io.socket.on('removeTiles', function(data) {
-			game.removeTiles(data);
-		});
-
-		io.socket.on('addWordToPlayer', function(data) {
-			game.addWordToPlayer(data);
-		});
-
-		io.socket.on('removeWordsFromPlayers', function(data) {
-			game.removeWordsFromPlayers(data);
-		});
-
-		io.socket.on('message', function(data) {
-		});
-
-		io.socket.on('endGame', function(data) {
-			game.endGame(data);
-		});
-
-	});
-});
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
-!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
-	__webpack_require__(2),
-	__webpack_require__(7)
-], __WEBPACK_AMD_DEFINE_RESULT__ = function(
-	gamestyles,
-	_
-) {
-	return {	
-		init: function(user) {
-			var self = this;
-
-			self.user = user;
-
-			//TODO: Have the controller do the "joining" before the rendering (res.view())
-			io.socket.post('/user/join', function(err) {
-				self.attachListeners();
-			});
-	
-			self.handleResize();
-		},
-
-		attachListeners: function() {
-			var self = this;
-
-			$(window).resize(function() {
-				self.handleResize();
-			});
-
-			$('.new-game-button').off('click').click(function() {
-				io.socket.post('/user/leaveGame', { userId: self.user.id }, function(err) {
-					io.socket.post('/user/join', { userId: self.user.id });	
-				});
-			});
-
-			$('.logout-button').off('click').click(function() {
-				var userId = self.user.id;
-				self.user = undefined;
-				io.socket.post('/logout', { userId: userId }, function(data) {
-					if (data && data.success) {
-						document.location.reload();
-					}
-				});
-			});
-
-			$('.chat-input').keyup(function(event) {
-				if (event.keyCode == 13) {
-					var msg = $(event.target).val();
-					if (msg) {
-						io.socket.post('/user/chat', {
-							sender: self.user.username,
-							msg: msg
-						});
-
-						$(event.target).val('');
-					}
-				}
-			});
-		},
-
-
-		handleResize: function() {
-			var tileContainer = $('.tiles-container');
-			var tileHeight = tileContainer.height();
-			tileContainer.width(tileHeight);
-			$('.chat-container').width(tileHeight);
-
-			var bodyWidth = $('body').width();
-			if (!bodyWidth) return;
-
-			var newMiddleColumnWidth = tileHeight;
-			var newSideColumnWidth = (bodyWidth - newMiddleColumnWidth ) / 2;
-			$('.column-left,.column-right').width(newSideColumnWidth);
-			$('.column-middle').width(newMiddleColumnWidth);
-			
-		},
-
-		receiveChat: function(data) {
-			var createdDate = new Date(data.createdDate);
-			var html = JST['assets/templates/chat_message.ejs']({
-				hour: ('0' + createdDate.getHours()).slice(-2),
-				minute: ('0' + createdDate.getMinutes()).slice(-2),
-				second: ('0' + createdDate.getSeconds()).slice(-2),
-				username: data.user,
-				message: data.text
-			});
-
-			var chatBox = $('.chat');
-			chatBox.append(html);
-			var chatHeight = chatBox[0].scrollHeight;
-			chatBox.scrollTop(chatHeight);
-		},
-		
-		updateCountdown: function(data) {
-			$('.countdown').html(data.seconds);
-		},
-
-		addTile: function(data) {
-			$('#tile-' + data.tileIndex).html(data.tileLetter);
-		},
-
-		userDisconnect: function(data) {
-			var userStatus = $('#user-status-' + data.user.id);
-			var newStatus = JST['assets/templates/user_status.ejs']({
-				userId: data.user.id,
-				userStatus: 'disconnected'
-			});
-
-			userStatus.replaceWith(newStatus);
-		},
-
-		userLeave: function(data) {
-			var userStatus = $('#user-status-' + data.user.id);
-			var newStatus = JST['assets/templates/user_status.ejs']({
-				userId: data.user.id,
-				userStatus: 'left'
-			});
-
-			userStatus.replaceWith(newStatus);
-		},
-
-
-		refreshGameState: function(data) {
-			var self = this;
-
-			self.refreshChat({ chat: data ? data.chat : []  });
-			self.refreshTiles({ tiles: data ? data.tiles : [] });	
-			self.refreshUserBoard({
-				users: data ? data.users : [],
-				words: data ? data.words : []
-			});
-
-			self.refreshMenu({ game: data ? data.game : [] });
-			self.attachListeners();
-		},
-
-		refreshChat: function(data) {
-			var self = this;
-
-			var chat = data.chat;
-			var chatBox = JST['assets/templates/chat_box.ejs']();
-			$('.chat-container').html(chatBox);
-
-			_.each(data.chat, function(chatMessage) {
-				self.receiveChat({
-					createdDate: chatMessage.createdAt,
-					text: chatMessage.text,
-					user: chatMessage.user.username
-				});
-			});
-		},
-
-		refreshTiles: function(data) {
-			if (!data.tiles) return;
-
-			var tileTable = JST['assets/templates/tile_table.ejs']();
-			$('.tiles-container').html(tileTable);
-
-			//TODO: is this overkill? loop through each tile, check if data.tiles has
-			//something.  if it does, use that value, otherwise clear it
-			$('.tile').removeClass('greyed').html('');
-			_.each(data.tiles, function(tile) {
-				var tileCell = $('#tile-' + tile.pos);
-				if (tile.claimed) {
-					tileCell.addClass('greyed');
-				}
-				else {
-					tileCell.html(tile.letter);
-				}
-			});
-		},
-
-		refreshUserBoard: function(data) {
-			if (!data.users || !data.users.length) return;
-
-			var userBoardLeftContainer = JST['assets/templates/user_board.ejs']({
-				side: 'left'
-			});
-
-			var userBoardRightContainer = JST['assets/templates/user_board.ejs']({
-				side: 'right'
-			});
-
-			$('.users-container-left').html(userBoardLeftContainer);
-			$('.users-container-right').html(userBoardRightContainer);
-			var usersLeftHTML = '';
-			var usersRightHTML = '';
-			var i=0;
-			_.each(data.users, function(user) {
-				var playerWords = data.words[user.id];
-				if (!playerWords) playerWords = [];
-
-				var wordContainer = $('#user-word-container-' + user.id);
-				var newWordContainer = JST['assets/templates/word_container.ejs']({
-					username: user.username,
-					userId: user.id,
-					userStatus: user.room ? 'connected' : 'disconnected',
-					words: playerWords,
-					wordTemplate: JST['assets/templates/word.ejs']
-				});
-
-				if (i % 2 === 0) {
-					usersLeftHTML += newWordContainer;
-				}
-				else {
-					usersRightHTML += newWordContainer;
-				}
-				i++;
-			});
-
-			$('.users-left').html(usersLeftHTML);
-			$('.users-right').html(usersRightHTML);
-		},
-
-		refreshMenu: function(data) {
-			var self = this;
-
-			if (!data.game || !self.user) return;
-
-			var menuRightContent = JST['assets/templates/menu_right.ejs']({
-				gameCompleted: data.game.completed
-			});
-
-			var menuLeftContent = JST['assets/templates/menu_left.ejs']();
-
-			$('.menu-container-right').html(menuRightContent);
-			$('.menu-container-left').html(menuLeftContent);
-		},
-
-		removeTiles: function(data) {
-			if (!data.tiles) return;
-
-			_.each(data.tiles, function(tile) {
-				var tile = $('#tile-' + tile.pos);
-				tile.html('');
-				tile.addClass('greyed');
-			});
-		},
-
-		addWordToPlayer: function(data) {
-			if (!data.user || !data.word) return;
-
-			var wordContainer = $('#user-' + data.user.id);
-			var wordDiv = JST['assets/templates/word.ejs']({
-				word: data.word
-			});
-
-			wordContainer.append(wordDiv);
-		},
-
-		removeWordsFromPlayers: function(data) {
-			if (!data.words) return;
-
-			_.each(data.words, function(word) {
-				$("#player-word-" + word.id).remove();
-			});
-		},
-
-		endGame: function(data) {
-			$('.new-game-button').removeClass('menu-button-hidden');
-		}
-	};
-}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(3);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(5)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../../node_modules/css-loader/index.js!./gameroom.css", function() {
-			var newContent = require("!!../../node_modules/css-loader/index.js!./gameroom.css");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(4)(undefined);
-// imports
-
-
-// module
-exports.push([module.i, "@border-light: #eeeeee;\nhtml {\n\theight: 100%;\n\twidth: 100%;\n}\n\nbody {\n\theight: 100%;\n\twidth: 100%;\n}\n\n.game-container {\n\theight: 100%;\n}\n\n.tiles-container {\n\twidth: 100%;\n\theight: 60%;\n\tmin-height: 300px;\n\tfloat: left;\n\tdisplay: inline-block;\n\tmargin-bottom: 10px;\n\tword-wrap: break-word;\n}\n\n.tiles-table {\n\theight: 100%;\n\twidth: 100%;\n\tborder: 1px solid #eeeeee;\n}\n\n.tile-row {\n\theight: 10%;\n}\n\n.tile {\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n.greyed {\n\ttransition: background-color 0.22s;\n\tbackground-color: #777777;\n}\n\n.chat-container {\n\twidth: 100%;\n\theight: 40%;\n\tmin-height: 300px;\n\tdisplay: inline-block;\n\tfloat: left;\n\tvertical-align: top;\n}\n\n.chat-input {\n\tdisplay: block;\n\twidth: 100%;\n\tmargin-bottom: 5px;\n}\n\n.chat {\n\theight: 200px;\n\twidth: 100%;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n.users-container {\n\theight: 100%;\n\twidth: 100%;\n\tdisplay: inline-block;\n\tpadding: 10px;\n\tfloat: left;\n}\n\n.users {\n\theight: 100%;\n}\n\n.users-right {\n\ttext-align: right;\n}\n\n.user-word-container {\n\tborder: 1px solid #eeeeee;\n\theight: 50%;\n\tpadding: 5px;\n}\n\n.words-container {\n\tmargin-top: 10px;\n}\n\n.menu-container {\n\theight: 35px;\n\twidth: 100%;\t\n}\n\n.menu-button {\n\theight: 100%;\n\twidth: 100px;\n\ttext-align: center;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-content: center;\n\tflex-direction: column;\n\tborder: 1px solid #eeeeee;\n\ttransition: color 0.2s ease-out, border 0.2s ease-out;\n}\n\n.menu-button:hover {\n\tcursor: pointer;\n\ttransition: color 0.2s ease, border 0.2s ease;\n\tcolor: #00aadf;\n\tborder: 1px solid #00aadf;\n}\n\n.menu-button:active {\n\tcolor: #a8c9e4;\n\tborder: 1px solid #a8c9e4;\n}\n\n.new-game-button {\n\tfloat: left;\n}\n\n.logout-button {\n\tfloat: right;\n}\n\n.menu-button-hidden {\n\tdisplay: none;\n}\n\n.column-left {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.column-middle {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 50%;\n\theight: 100%;\n}\n\n.column-right {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.countdown {\n\tdisplay: inline-block;\n\tfloat: right;\n}\n", ""]);
-
-// exports
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-/*
-	MIT License http://www.opensource.org/licenses/mit-license.php
-	Author Tobias Koppers @sokra
-*/
-// css base code, injected by the css-loader
-module.exports = function(useSourceMap) {
-	var list = [];
-
-	// return the list of modules as css string
-	list.toString = function toString() {
-		return this.map(function (item) {
-			var content = cssWithMappingToString(item, useSourceMap);
-			if(item[2]) {
-				return "@media " + item[2] + "{" + content + "}";
-			} else {
-				return content;
-			}
-		}).join("");
-	};
-
-	// import a list of modules into the list
-	list.i = function(modules, mediaQuery) {
-		if(typeof modules === "string")
-			modules = [[null, modules, ""]];
-		var alreadyImportedModules = {};
-		for(var i = 0; i < this.length; i++) {
-			var id = this[i][0];
-			if(typeof id === "number")
-				alreadyImportedModules[id] = true;
-		}
-		for(i = 0; i < modules.length; i++) {
-			var item = modules[i];
-			// skip already imported module
-			// this implementation is not 100% perfect for weird media query combinations
-			//  when a module is imported multiple times with different media queries.
-			//  I hope this will never occur (Hey this way we have smaller bundles)
-			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
-				if(mediaQuery && !item[2]) {
-					item[2] = mediaQuery;
-				} else if(mediaQuery) {
-					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
-				}
-				list.push(item);
-			}
-		}
-	};
-	return list;
-};
-
-function cssWithMappingToString(item, useSourceMap) {
-	var content = item[1] || '';
-	var cssMapping = item[3];
-	if (!cssMapping) {
-		return content;
-	}
-
-	if (useSourceMap && typeof btoa === 'function') {
-		var sourceMapping = toComment(cssMapping);
-		var sourceURLs = cssMapping.sources.map(function (source) {
-			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
-		});
-
-		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
-	}
-
-	return [content].join('\n');
-}
-
-// Adapted from convert-source-map (MIT)
-function toComment(sourceMap) {
-	// eslint-disable-next-line no-undef
-	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
-	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
-
-	return '/*# ' + data + ' */';
-}
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/*
-	MIT License http://www.opensource.org/licenses/mit-license.php
-	Author Tobias Koppers @sokra
-*/
-
-var stylesInDom = {};
-
-var	memoize = function (fn) {
-	var memo;
-
-	return function () {
-		if (typeof memo === "undefined") memo = fn.apply(this, arguments);
-		return memo;
-	};
-};
-
-var isOldIE = memoize(function () {
-	// Test for IE <= 9 as proposed by Browserhacks
-	// @see http://browserhacks.com/#hack-e71d8692f65334173fee715c222cb805
-	// Tests for existence of standard globals is to allow style-loader
-	// to operate correctly into non-standard environments
-	// @see https://github.com/webpack-contrib/style-loader/issues/177
-	return window && document && document.all && !window.atob;
-});
-
-var getElement = (function (fn) {
-	var memo = {};
-
-	return function(selector) {
-		if (typeof memo[selector] === "undefined") {
-			memo[selector] = fn.call(this, selector);
-		}
-
-		return memo[selector]
-	};
-})(function (target) {
-	return document.querySelector(target)
-});
-
-var singleton = null;
-var	singletonCounter = 0;
-var	stylesInsertedAtTop = [];
-
-var	fixUrls = __webpack_require__(6);
-
-module.exports = function(list, options) {
-	if (typeof DEBUG !== "undefined" && DEBUG) {
-		if (typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
-	}
-
-	options = options || {};
-
-	options.attrs = typeof options.attrs === "object" ? options.attrs : {};
-
-	// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
-	// tags it will allow on a page
-	if (!options.singleton) options.singleton = isOldIE();
-
-	// By default, add <style> tags to the <head> element
-	if (!options.insertInto) options.insertInto = "head";
-
-	// By default, add <style> tags to the bottom of the target
-	if (!options.insertAt) options.insertAt = "bottom";
-
-	var styles = listToStyles(list, options);
-
-	addStylesToDom(styles, options);
-
-	return function update (newList) {
-		var mayRemove = [];
-
-		for (var i = 0; i < styles.length; i++) {
-			var item = styles[i];
-			var domStyle = stylesInDom[item.id];
-
-			domStyle.refs--;
-			mayRemove.push(domStyle);
-		}
-
-		if(newList) {
-			var newStyles = listToStyles(newList, options);
-			addStylesToDom(newStyles, options);
-		}
-
-		for (var i = 0; i < mayRemove.length; i++) {
-			var domStyle = mayRemove[i];
-
-			if(domStyle.refs === 0) {
-				for (var j = 0; j < domStyle.parts.length; j++) domStyle.parts[j]();
-
-				delete stylesInDom[domStyle.id];
-			}
-		}
-	};
-};
-
-function addStylesToDom (styles, options) {
-	for (var i = 0; i < styles.length; i++) {
-		var item = styles[i];
-		var domStyle = stylesInDom[item.id];
-
-		if(domStyle) {
-			domStyle.refs++;
-
-			for(var j = 0; j < domStyle.parts.length; j++) {
-				domStyle.parts[j](item.parts[j]);
-			}
-
-			for(; j < item.parts.length; j++) {
-				domStyle.parts.push(addStyle(item.parts[j], options));
-			}
-		} else {
-			var parts = [];
-
-			for(var j = 0; j < item.parts.length; j++) {
-				parts.push(addStyle(item.parts[j], options));
-			}
-
-			stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
-		}
-	}
-}
-
-function listToStyles (list, options) {
-	var styles = [];
-	var newStyles = {};
-
-	for (var i = 0; i < list.length; i++) {
-		var item = list[i];
-		var id = options.base ? item[0] + options.base : item[0];
-		var css = item[1];
-		var media = item[2];
-		var sourceMap = item[3];
-		var part = {css: css, media: media, sourceMap: sourceMap};
-
-		if(!newStyles[id]) styles.push(newStyles[id] = {id: id, parts: [part]});
-		else newStyles[id].parts.push(part);
-	}
-
-	return styles;
-}
-
-function insertStyleElement (options, style) {
-	var target = getElement(options.insertInto)
-
-	if (!target) {
-		throw new Error("Couldn't find a style target. This probably means that the value for the 'insertInto' parameter is invalid.");
-	}
-
-	var lastStyleElementInsertedAtTop = stylesInsertedAtTop[stylesInsertedAtTop.length - 1];
-
-	if (options.insertAt === "top") {
-		if (!lastStyleElementInsertedAtTop) {
-			target.insertBefore(style, target.firstChild);
-		} else if (lastStyleElementInsertedAtTop.nextSibling) {
-			target.insertBefore(style, lastStyleElementInsertedAtTop.nextSibling);
-		} else {
-			target.appendChild(style);
-		}
-		stylesInsertedAtTop.push(style);
-	} else if (options.insertAt === "bottom") {
-		target.appendChild(style);
-	} else {
-		throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
-	}
-}
-
-function removeStyleElement (style) {
-	if (style.parentNode === null) return false;
-	style.parentNode.removeChild(style);
-
-	var idx = stylesInsertedAtTop.indexOf(style);
-	if(idx >= 0) {
-		stylesInsertedAtTop.splice(idx, 1);
-	}
-}
-
-function createStyleElement (options) {
-	var style = document.createElement("style");
-
-	options.attrs.type = "text/css";
-
-	addAttrs(style, options.attrs);
-	insertStyleElement(options, style);
-
-	return style;
-}
-
-function createLinkElement (options) {
-	var link = document.createElement("link");
-
-	options.attrs.type = "text/css";
-	options.attrs.rel = "stylesheet";
-
-	addAttrs(link, options.attrs);
-	insertStyleElement(options, link);
-
-	return link;
-}
-
-function addAttrs (el, attrs) {
-	Object.keys(attrs).forEach(function (key) {
-		el.setAttribute(key, attrs[key]);
-	});
-}
-
-function addStyle (obj, options) {
-	var style, update, remove, result;
-
-	// If a transform function was defined, run it on the css
-	if (options.transform && obj.css) {
-	    result = options.transform(obj.css);
-
-	    if (result) {
-	    	// If transform returns a value, use that instead of the original css.
-	    	// This allows running runtime transformations on the css.
-	    	obj.css = result;
-	    } else {
-	    	// If the transform function returns a falsy value, don't add this css.
-	    	// This allows conditional loading of css
-	    	return function() {
-	    		// noop
-	    	};
-	    }
-	}
-
-	if (options.singleton) {
-		var styleIndex = singletonCounter++;
-
-		style = singleton || (singleton = createStyleElement(options));
-
-		update = applyToSingletonTag.bind(null, style, styleIndex, false);
-		remove = applyToSingletonTag.bind(null, style, styleIndex, true);
-
-	} else if (
-		obj.sourceMap &&
-		typeof URL === "function" &&
-		typeof URL.createObjectURL === "function" &&
-		typeof URL.revokeObjectURL === "function" &&
-		typeof Blob === "function" &&
-		typeof btoa === "function"
-	) {
-		style = createLinkElement(options);
-		update = updateLink.bind(null, style, options);
-		remove = function () {
-			removeStyleElement(style);
-
-			if(style.href) URL.revokeObjectURL(style.href);
-		};
-	} else {
-		style = createStyleElement(options);
-		update = applyToTag.bind(null, style);
-		remove = function () {
-			removeStyleElement(style);
-		};
-	}
-
-	update(obj);
-
-	return function updateStyle (newObj) {
-		if (newObj) {
-			if (
-				newObj.css === obj.css &&
-				newObj.media === obj.media &&
-				newObj.sourceMap === obj.sourceMap
-			) {
-				return;
-			}
-
-			update(obj = newObj);
-		} else {
-			remove();
-		}
-	};
-}
-
-var replaceText = (function () {
-	var textStore = [];
-
-	return function (index, replacement) {
-		textStore[index] = replacement;
-
-		return textStore.filter(Boolean).join('\n');
-	};
-})();
-
-function applyToSingletonTag (style, index, remove, obj) {
-	var css = remove ? "" : obj.css;
-
-	if (style.styleSheet) {
-		style.styleSheet.cssText = replaceText(index, css);
-	} else {
-		var cssNode = document.createTextNode(css);
-		var childNodes = style.childNodes;
-
-		if (childNodes[index]) style.removeChild(childNodes[index]);
-
-		if (childNodes.length) {
-			style.insertBefore(cssNode, childNodes[index]);
-		} else {
-			style.appendChild(cssNode);
-		}
-	}
-}
-
-function applyToTag (style, obj) {
-	var css = obj.css;
-	var media = obj.media;
-
-	if(media) {
-		style.setAttribute("media", media)
-	}
-
-	if(style.styleSheet) {
-		style.styleSheet.cssText = css;
-	} else {
-		while(style.firstChild) {
-			style.removeChild(style.firstChild);
-		}
-
-		style.appendChild(document.createTextNode(css));
-	}
-}
-
-function updateLink (link, options, obj) {
-	var css = obj.css;
-	var sourceMap = obj.sourceMap;
-
-	/*
-		If convertToAbsoluteUrls isn't defined, but sourcemaps are enabled
-		and there is no publicPath defined then lets turn convertToAbsoluteUrls
-		on by default.  Otherwise default to the convertToAbsoluteUrls option
-		directly
-	*/
-	var autoFixUrls = options.convertToAbsoluteUrls === undefined && sourceMap;
-
-	if (options.convertToAbsoluteUrls || autoFixUrls) {
-		css = fixUrls(css);
-	}
-
-	if (sourceMap) {
-		// http://stackoverflow.com/a/26603875
-		css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
-	}
-
-	var blob = new Blob([css], { type: "text/css" });
-
-	var oldSrc = link.href;
-
-	link.href = URL.createObjectURL(blob);
-
-	if(oldSrc) URL.revokeObjectURL(oldSrc);
-}
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-
-/**
- * When source maps are enabled, `style-loader` uses a link element with a data-uri to
- * embed the css on the page. This breaks all relative urls because now they are relative to a
- * bundle instead of the current page.
- *
- * One solution is to only use full urls, but that may be impossible.
- *
- * Instead, this function "fixes" the relative urls to be absolute according to the current page location.
- *
- * A rudimentary test suite is located at `test/fixUrls.js` and can be run via the `npm test` command.
- *
- */
-
-module.exports = function (css) {
-  // get current location
-  var location = typeof window !== "undefined" && window.location;
-
-  if (!location) {
-    throw new Error("fixUrls requires window.location");
-  }
-
-	// blank or null?
-	if (!css || typeof css !== "string") {
-	  return css;
-  }
-
-  var baseUrl = location.protocol + "//" + location.host;
-  var currentDir = baseUrl + location.pathname.replace(/\/[^\/]*$/, "/");
-
-	// convert each url(...)
-	/*
-	This regular expression is just a way to recursively match brackets within
-	a string.
-
-	 /url\s*\(  = Match on the word "url" with any whitespace after it and then a parens
-	   (  = Start a capturing group
-	     (?:  = Start a non-capturing group
-	         [^)(]  = Match anything that isn't a parentheses
-	         |  = OR
-	         \(  = Match a start parentheses
-	             (?:  = Start another non-capturing groups
-	                 [^)(]+  = Match anything that isn't a parentheses
-	                 |  = OR
-	                 \(  = Match a start parentheses
-	                     [^)(]*  = Match anything that isn't a parentheses
-	                 \)  = Match a end parentheses
-	             )  = End Group
-              *\) = Match anything and then a close parens
-          )  = Close non-capturing group
-          *  = Match anything
-       )  = Close capturing group
-	 \)  = Match a close parens
-
-	 /gi  = Get all matches, not the first.  Be case insensitive.
-	 */
-	var fixedCss = css.replace(/url\s*\(((?:[^)(]|\((?:[^)(]+|\([^)(]*\))*\))*)\)/gi, function(fullMatch, origUrl) {
-		// strip quotes (if they exist)
-		var unquotedOrigUrl = origUrl
-			.trim()
-			.replace(/^"(.*)"$/, function(o, $1){ return $1; })
-			.replace(/^'(.*)'$/, function(o, $1){ return $1; });
-
-		// already a full url? no change
-		if (/^(#|data:|http:\/\/|https:\/\/|file:\/\/\/)/i.test(unquotedOrigUrl)) {
-		  return fullMatch;
-		}
-
-		// convert the url to a full url
-		var newUrl;
-
-		if (unquotedOrigUrl.indexOf("//") === 0) {
-		  	//TODO: should we add protocol?
-			newUrl = unquotedOrigUrl;
-		} else if (unquotedOrigUrl.indexOf("/") === 0) {
-			// path should be relative to the base url
-			newUrl = baseUrl + unquotedOrigUrl; // already starts with '/'
-		} else {
-			// path should be relative to current directory
-			newUrl = currentDir + unquotedOrigUrl.replace(/^\.\//, ""); // Strip leading './'
-		}
-
-		// send back the fixed url(...)
-		return "url(" + JSON.stringify(newUrl) + ")";
-	});
-
-	// send back the fixed css
-	return fixedCss;
-};
-
-
-/***/ }),
-/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, module) {var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -18079,6 +17156,1135 @@ module.exports = function (css) {
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8), __webpack_require__(9)(module)))
 
 /***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
+!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
+	__webpack_require__(5),
+	__webpack_require__(0),
+	__webpack_require__(10)	
+], __WEBPACK_AMD_DEFINE_RESULT__ = function(
+	gamestyles,
+	_,
+	Utils
+) {
+	return {	
+		init: function(user) {
+			var self = this;
+
+			self.user = user;
+			//self.animationQueues = {};
+			//self.animationQueue = [];
+			self.animation = Promise.resolve();
+
+			//TODO: Have the controller do the "joining" before the rendering (res.view())
+			io.socket.post('/user/join', function(err) {
+				self.attachListeners();
+			});
+	
+			self.handleResize();
+		},
+
+		attachListeners: function() {
+			var self = this;
+
+			$(window).resize(function() {
+				self.handleResize();
+			});
+
+			$('.new-game-button').off('click').click(function() {
+				io.socket.post('/user/leaveGame', { userId: self.user.id }, function(err) {
+					io.socket.post('/user/join', { userId: self.user.id });	
+				});
+			});
+
+			$('.logout-button').off('click').click(function() {
+				var userId = self.user.id;
+				self.user = undefined;
+				io.socket.post('/logout', { userId: userId }, function(data) {
+					if (data && data.success) {
+						document.location.reload();
+					}
+				});
+			});
+
+			$('.chat-input').keyup(function(event) {
+				if (event.keyCode == 13) {
+					var msg = $(event.target).val();
+					if (msg) {
+						io.socket.post('/user/chat', {
+							sender: self.user.username,
+							msg: msg
+						});
+
+						$(event.target).val('');
+					}
+				}
+			});
+		},
+
+
+		handleResize: function() {
+			var tileContainer = $('.tiles-container');
+			var tileHeight = tileContainer.height();
+			tileContainer.width(tileHeight);
+			$('.chat-container').width(tileHeight);
+
+			var bodyWidth = $('body').width();
+			if (!bodyWidth) return;
+
+			var newMiddleColumnWidth = tileHeight;
+			var newSideColumnWidth = (bodyWidth - newMiddleColumnWidth ) / 2;
+			$('.column-left,.column-right').width(newSideColumnWidth);
+			$('.column-middle').width(newMiddleColumnWidth);
+			
+		},
+
+		receiveChat: function(data) {
+			var createdDate = new Date(data.createdDate);
+			var html = JST['assets/templates/chat_message.ejs']({
+				hour: ('0' + createdDate.getHours()).slice(-2),
+				minute: ('0' + createdDate.getMinutes()).slice(-2),
+				second: ('0' + createdDate.getSeconds()).slice(-2),
+				username: data.user.username,
+				color: data.userColor,
+				message: data.text
+			});
+
+			var chatBox = $('.chat');
+			chatBox.prepend(html);
+			//var chatHeight = chatBox[0].scrollHeight;
+			chatBox.scrollTop(0);
+		},
+		
+		updateCountdown: function(data) {
+			$('.countdown').html(data.seconds);
+		},
+
+		addTile: function(data) {
+			var tile = $('#tile-' + data.tileIndex);
+			tile.html(data.tileLetter);
+			tile.addClass('tile-activated');
+			tile.animate({ backgroundColor: '' }, 500, function() {
+				tile.removeClass('tile-activated');	
+				
+				// So that we can continue the change the color...
+				tile.css("background-color", "");
+			});
+		},
+
+		userDisconnect: function(data) {
+			var userStatus = $('#user-status-' + data.user.id);
+			var newStatus = JST['assets/templates/user_status.ejs']({
+				userId: data.user.id,
+				userStatus: 'disconnected'
+			});
+
+			$('#user-name-' + data.user.id).addClass('user-name-disconnected');
+			userStatus.replaceWith(newStatus);
+		},
+
+		userLeave: function(data) {
+			var userStatus = $('#user-status-' + data.user.id);
+			var newStatus = JST['assets/templates/user_status.ejs']({
+				userId: data.user.id,
+				userStatus: 'left'
+			});
+
+			userStatus.replaceWith(newStatus);
+		},
+
+
+		refreshGameState: function(data) {
+			var self = this;
+
+			self.refreshChat({ chat: data ? data.chat : []  });
+			self.refreshTiles({
+				tiles: data ? data.tiles : [],
+				game: data? data.game: []
+			});
+
+			self.refreshUserBoard({
+				users: data ? data.users : [],
+				words: data ? data.words : [],
+				userGames: data ? data.userGames: []
+			});
+
+			self.refreshMenu({ game: data ? data.game : [] });
+			self.attachListeners();
+		},
+
+		refreshChat: function(data) {
+			var self = this;
+
+			var chat = data.chat;
+			var chatBox = JST['assets/templates/chat_box.ejs']();
+			$('.chat-container').html(chatBox);
+
+			_.each(data.chat, function(chatMessage) {
+				self.receiveChat({
+					createdDate: chatMessage.createdAt,
+					text: chatMessage.text,
+					user: chatMessage.user,
+					userColor: chatMessage.color
+				});
+			});
+		},
+
+		refreshTiles: function(data) {
+			if (!data.tiles || !data.game) return;
+
+			var tileTable = JST['assets/templates/tile_table.ejs']({
+				gameCompleted: data.game.completed	
+			});
+
+			$('.tiles-container').html(tileTable);
+
+			//TODO: is this overkill? loop through each tile, check if data.tiles has
+			//something.  if it does, use that value, otherwise clear it
+			$('.tile').removeClass('greyed').html('');
+			_.each(data.tiles, function(tile) {
+				var tileCell = $('#tile-' + tile.pos);
+				if (tile.claimed) {
+					tileCell.addClass('greyed');
+				}
+				else {
+					tileCell.html(tile.letter);
+				}
+			});
+		},
+
+		refreshUserBoard: function(data) {
+			if (!data.users || !data.users.length) return;
+
+			var userBoardLeftContainer = JST['assets/templates/user_board.ejs']({
+				side: 'left'
+			});
+
+			var userBoardRightContainer = JST['assets/templates/user_board.ejs']({
+				side: 'right'
+			});
+
+			$('.users-container-left').html(userBoardLeftContainer);
+			$('.users-container-right').html(userBoardRightContainer);
+			var usersLeftHTML = '';
+			var usersRightHTML = '';
+			var i=0;
+			_.each(data.users, function(user) {
+				var playerWords = data.words[user.id];
+				if (!playerWords) playerWords = [];
+
+				var userGame = _.find(data.userGames, function(userGame) {
+					return userGame.user.id == user.id && userGame.game.id == user.game;
+				});
+
+				var wordContainer = $('#user-word-container-' + user.id);
+				var newWordContainer = JST['assets/templates/word_container.ejs']({
+					username: user.username,
+					userId: user.id,
+					userScore: userGame.score,
+					userStatus: user.room ? 'connected' : 'disconnected',
+					words: playerWords,
+					wordTemplate: JST['assets/templates/word.ejs'],
+					userStatusTemplate: JST['assets/templates/user_status.ejs']
+				});
+
+				if (i % 2 === 0) {
+					usersLeftHTML += newWordContainer;
+				}
+				else {
+					usersRightHTML += newWordContainer;
+				}
+				i++;
+			});
+
+			_.each($('.player-word'), function(playerWord) {
+				var letterCount = 0;
+				_.each($(playerWord).find('.player-letter'), function(playerLetter) {
+					$(playerLetter).css('left', letterCount * $(playerLetter).height());
+					letterCount++;
+				});
+			});
+
+			$('.users-left').html(usersLeftHTML);
+			$('.users-right').html(usersRightHTML);
+		},
+
+		refreshMenu: function(data) {
+			var self = this;
+
+			if (!data.game || !self.user) return;
+
+			var menuRightContent = JST['assets/templates/menu_right.ejs']({
+				gameCompleted: data.game.completed
+			});
+
+			var menuLeftContent = JST['assets/templates/menu_left.ejs']();
+
+			$('.menu-container-right').html(menuRightContent);
+			$('.menu-container-left').html(menuLeftContent);
+		},
+
+		removeTiles: function(data) {
+			var self = this;
+			if (!data.tiles) return;
+
+			_.each(data.tiles, function(tile) {
+				var tile = $('#tile-' + tile.pos);
+				tile.html('');
+				tile.addClass('greyed');
+			});
+		},
+
+		endGame: function(data) {
+			$('.tiles-table').addClass('blur');
+			$('.new-game-button').removeClass('menu-button-hidden');
+		},
+		
+		addWordToPlayer: function(data) {
+			var self = this;
+				
+			self.animation = self.animation.then(function(resolveData) {
+				return self._addWordToPlayer(data);
+			});
+		},
+
+		_addWordToPlayer: function(data) {
+			var self = this;
+
+			var removedBoardLetters = self._getRemovedBoardLetters(data);
+			var removedPlayerWordData = self._getRemovedPlayerWordData(data);
+
+			var newWordDiv = self._getNewWordDiv(data, removedPlayerWordData);
+			var removedLetters = removedBoardLetters.concat(removedPlayerWordData.removedPlayerLetters);
+			
+			var sortedRemovedTiles = self._getSortedRemovedTiles(data, removedLetters);
+
+			var letterCount = 0;
+			var animationPromises = [];
+			_.each(sortedRemovedTiles, function(tile) {
+				var tileDiv = tile.el;
+				var newLetterDiv = JST['assets/templates/letter.ejs']({
+					letter: tile.letter
+				});
+
+				var animationPromise;
+				if (tile.type === 'letter' || !tile.isFirstCurrentPlayerWord) {
+					var cloneClass = 'tile-clone';
+
+					//TODO: ????
+					animationPromise = Utils.cloneAndAnimateMove(tileDiv, newWordDiv, cloneClass, newLetterDiv, letterCount, tile.pos);
+				}
+				else {
+					animationPromise = Utils.animateMove(tileDiv, letterCount);
+				}
+
+				if (tile.type == 'letter') {
+					tileDiv.html('');
+					tileDiv.addClass('greyed');
+				}
+
+				animationPromises.push(animationPromise);
+				letterCount++;
+			});
+
+			self._removeTakenWords(data, removedPlayerWordData);
+			self._updateScores(data);
+
+			return Promise.all(animationPromises).then(function(data) {	
+				return Promise.resolve();
+			});
+		},
+
+		_updateScores: function(data) {
+			var self = this;
+
+			var userScoreContainer = $('#user-score-' + data.user.id);
+			userScoreContainer.html(data.userGame.score);
+
+			var otherUserGames = data.removedWordData ? data.removedWordData.userGames : [];
+			_.each(otherUserGames, function(userGame) {
+				console.log(userGame);
+				var otherUserScoreContainer = $('#user-score-' + userGame.user);
+				otherUserScoreContainer.html(userGame.score);
+			});
+		},
+
+		_getSortedRemovedTiles: function(data, removedLetters) {
+			var self = this;
+
+			var word = data.word.word;
+			var sortedRemovedTiles = [];
+			for (var i = 0; i < word.length; i++) {
+				var matchingIndex = _.findIndex(removedLetters, function(letter) {
+					return letter.letter == word[i];
+				});
+
+				if (matchingIndex != -1) {
+					sortedRemovedTiles.push(removedLetters[matchingIndex]);
+					removedLetters.splice(matchingIndex, 1);
+				}
+			}
+
+			return sortedRemovedTiles;
+		},
+
+
+		_getRemovedBoardLetters: function(data) {
+			var self = this;
+
+			var removedTiles = data.removedTiles ? _.clone(data.removedTiles) : [];
+			var removedBoardLetters = [];
+			_.each(removedTiles, function(tile) {
+				removedBoardLetters.push({
+					letter: tile.letter.trim(),
+					el: $('#tile-' + tile.pos),
+					type: 'letter',
+					pos: 0
+				});
+			});
+		
+			return removedBoardLetters;
+		},
+
+		_getRemovedPlayerWordData: function(data) {
+			var self = this;
+
+			var removedWords = data.removedWordData ? _.clone(data.removedWordData.removedWords) : [];
+			var removedPlayerWords = [];
+			var removedPlayerLetters = [];
+			var currentPlayerWords = [];
+			_.each(removedWords, function(word) {
+				var wordDiv = $('#player-word-' + word.id);
+				removedPlayerWords.push(wordDiv);
+			
+				var isFirstCurrentPlayerWord = false;	
+				if (word.user == data.user.id) {
+					currentPlayerWords.push(word);
+					if (currentPlayerWords.length == 1) {
+						isFirstCurrentPlayerWord = true;
+					}
+				}
+				
+				var letterPosition = 0;
+				_.each(wordDiv.find('.player-letter'), function(letterDiv) {
+					removedPlayerLetters.push({
+						letter: $(letterDiv).html().trim(),
+						el: $(letterDiv),
+						type: 'word',
+						pos: letterPosition,
+						isFirstCurrentPlayerWord: isFirstCurrentPlayerWord
+					});
+
+					letterPosition++;
+				});	
+			});
+
+			return {
+				removedPlayerWordDivs: removedPlayerWords,
+				removedPlayerLetters: removedPlayerLetters,
+				currentPlayerWords: currentPlayerWords
+			};
+		},
+
+		_getNewWordDiv: function(data, removedWordData) {
+			var self = this;
+
+			var currentPlayerWords = removedWordData.currentPlayerWords;
+			var wordDiv;
+			if (currentPlayerWords.length) {
+				var firstWord = currentPlayerWords[0];
+				wordDiv = $('#player-word-' + firstWord.id);
+				wordDiv.attr('id', 'player-word-' + data.word.id);
+			}
+			else {
+				var newWordDiv = JST['assets/templates/word.ejs']({
+					word: data.word,
+					noLetters: true
+				});
+
+				var wordContainer = $('#user-' + data.user.id);
+				wordContainer.append(newWordDiv);
+				wordDiv = wordContainer.find('#player-word-' + data.word.id);
+			}
+
+			return wordDiv;
+		},
+
+		_removeTakenWords: function(data, removedWordData) {
+			var self = this;
+
+			var removedPlayerWords = data.removedWordData ? _.clone(data.removedWordData.removedWords) : [];
+			var currentPlayerWords = removedWordData ? removedWordData.currentPlayerWords : [];
+			var firstCurrentPlayerWord = currentPlayerWords[0];
+
+			var removeableWords = [];
+			_.each(removedPlayerWords, function(word) {
+				if (word.user != data.user.id || word.id != firstCurrentPlayerWord.id) {
+					removeableWords.push(word);
+				}
+			});
+
+			_.each(removeableWords, function(word) {
+				$('#player-word-' + word.id).remove();
+			});
+		}
+	};
+}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+// css base code, injected by the css-loader
+module.exports = function(useSourceMap) {
+	var list = [];
+
+	// return the list of modules as css string
+	list.toString = function toString() {
+		return this.map(function (item) {
+			var content = cssWithMappingToString(item, useSourceMap);
+			if(item[2]) {
+				return "@media " + item[2] + "{" + content + "}";
+			} else {
+				return content;
+			}
+		}).join("");
+	};
+
+	// import a list of modules into the list
+	list.i = function(modules, mediaQuery) {
+		if(typeof modules === "string")
+			modules = [[null, modules, ""]];
+		var alreadyImportedModules = {};
+		for(var i = 0; i < this.length; i++) {
+			var id = this[i][0];
+			if(typeof id === "number")
+				alreadyImportedModules[id] = true;
+		}
+		for(i = 0; i < modules.length; i++) {
+			var item = modules[i];
+			// skip already imported module
+			// this implementation is not 100% perfect for weird media query combinations
+			//  when a module is imported multiple times with different media queries.
+			//  I hope this will never occur (Hey this way we have smaller bundles)
+			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+				if(mediaQuery && !item[2]) {
+					item[2] = mediaQuery;
+				} else if(mediaQuery) {
+					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+				}
+				list.push(item);
+			}
+		}
+	};
+	return list;
+};
+
+function cssWithMappingToString(item, useSourceMap) {
+	var content = item[1] || '';
+	var cssMapping = item[3];
+	if (!cssMapping) {
+		return content;
+	}
+
+	if (useSourceMap && typeof btoa === 'function') {
+		var sourceMapping = toComment(cssMapping);
+		var sourceURLs = cssMapping.sources.map(function (source) {
+			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
+		});
+
+		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
+	}
+
+	return [content].join('\n');
+}
+
+// Adapted from convert-source-map (MIT)
+function toComment(sourceMap) {
+	// eslint-disable-next-line no-undef
+	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
+	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
+
+	return '/*# ' + data + ' */';
+}
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+
+var stylesInDom = {};
+
+var	memoize = function (fn) {
+	var memo;
+
+	return function () {
+		if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+		return memo;
+	};
+};
+
+var isOldIE = memoize(function () {
+	// Test for IE <= 9 as proposed by Browserhacks
+	// @see http://browserhacks.com/#hack-e71d8692f65334173fee715c222cb805
+	// Tests for existence of standard globals is to allow style-loader
+	// to operate correctly into non-standard environments
+	// @see https://github.com/webpack-contrib/style-loader/issues/177
+	return window && document && document.all && !window.atob;
+});
+
+var getElement = (function (fn) {
+	var memo = {};
+
+	return function(selector) {
+		if (typeof memo[selector] === "undefined") {
+			memo[selector] = fn.call(this, selector);
+		}
+
+		return memo[selector]
+	};
+})(function (target) {
+	return document.querySelector(target)
+});
+
+var singleton = null;
+var	singletonCounter = 0;
+var	stylesInsertedAtTop = [];
+
+var	fixUrls = __webpack_require__(7);
+
+module.exports = function(list, options) {
+	if (typeof DEBUG !== "undefined" && DEBUG) {
+		if (typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+	}
+
+	options = options || {};
+
+	options.attrs = typeof options.attrs === "object" ? options.attrs : {};
+
+	// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+	// tags it will allow on a page
+	if (!options.singleton) options.singleton = isOldIE();
+
+	// By default, add <style> tags to the <head> element
+	if (!options.insertInto) options.insertInto = "head";
+
+	// By default, add <style> tags to the bottom of the target
+	if (!options.insertAt) options.insertAt = "bottom";
+
+	var styles = listToStyles(list, options);
+
+	addStylesToDom(styles, options);
+
+	return function update (newList) {
+		var mayRemove = [];
+
+		for (var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+
+			domStyle.refs--;
+			mayRemove.push(domStyle);
+		}
+
+		if(newList) {
+			var newStyles = listToStyles(newList, options);
+			addStylesToDom(newStyles, options);
+		}
+
+		for (var i = 0; i < mayRemove.length; i++) {
+			var domStyle = mayRemove[i];
+
+			if(domStyle.refs === 0) {
+				for (var j = 0; j < domStyle.parts.length; j++) domStyle.parts[j]();
+
+				delete stylesInDom[domStyle.id];
+			}
+		}
+	};
+};
+
+function addStylesToDom (styles, options) {
+	for (var i = 0; i < styles.length; i++) {
+		var item = styles[i];
+		var domStyle = stylesInDom[item.id];
+
+		if(domStyle) {
+			domStyle.refs++;
+
+			for(var j = 0; j < domStyle.parts.length; j++) {
+				domStyle.parts[j](item.parts[j]);
+			}
+
+			for(; j < item.parts.length; j++) {
+				domStyle.parts.push(addStyle(item.parts[j], options));
+			}
+		} else {
+			var parts = [];
+
+			for(var j = 0; j < item.parts.length; j++) {
+				parts.push(addStyle(item.parts[j], options));
+			}
+
+			stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+		}
+	}
+}
+
+function listToStyles (list, options) {
+	var styles = [];
+	var newStyles = {};
+
+	for (var i = 0; i < list.length; i++) {
+		var item = list[i];
+		var id = options.base ? item[0] + options.base : item[0];
+		var css = item[1];
+		var media = item[2];
+		var sourceMap = item[3];
+		var part = {css: css, media: media, sourceMap: sourceMap};
+
+		if(!newStyles[id]) styles.push(newStyles[id] = {id: id, parts: [part]});
+		else newStyles[id].parts.push(part);
+	}
+
+	return styles;
+}
+
+function insertStyleElement (options, style) {
+	var target = getElement(options.insertInto)
+
+	if (!target) {
+		throw new Error("Couldn't find a style target. This probably means that the value for the 'insertInto' parameter is invalid.");
+	}
+
+	var lastStyleElementInsertedAtTop = stylesInsertedAtTop[stylesInsertedAtTop.length - 1];
+
+	if (options.insertAt === "top") {
+		if (!lastStyleElementInsertedAtTop) {
+			target.insertBefore(style, target.firstChild);
+		} else if (lastStyleElementInsertedAtTop.nextSibling) {
+			target.insertBefore(style, lastStyleElementInsertedAtTop.nextSibling);
+		} else {
+			target.appendChild(style);
+		}
+		stylesInsertedAtTop.push(style);
+	} else if (options.insertAt === "bottom") {
+		target.appendChild(style);
+	} else {
+		throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
+	}
+}
+
+function removeStyleElement (style) {
+	if (style.parentNode === null) return false;
+	style.parentNode.removeChild(style);
+
+	var idx = stylesInsertedAtTop.indexOf(style);
+	if(idx >= 0) {
+		stylesInsertedAtTop.splice(idx, 1);
+	}
+}
+
+function createStyleElement (options) {
+	var style = document.createElement("style");
+
+	options.attrs.type = "text/css";
+
+	addAttrs(style, options.attrs);
+	insertStyleElement(options, style);
+
+	return style;
+}
+
+function createLinkElement (options) {
+	var link = document.createElement("link");
+
+	options.attrs.type = "text/css";
+	options.attrs.rel = "stylesheet";
+
+	addAttrs(link, options.attrs);
+	insertStyleElement(options, link);
+
+	return link;
+}
+
+function addAttrs (el, attrs) {
+	Object.keys(attrs).forEach(function (key) {
+		el.setAttribute(key, attrs[key]);
+	});
+}
+
+function addStyle (obj, options) {
+	var style, update, remove, result;
+
+	// If a transform function was defined, run it on the css
+	if (options.transform && obj.css) {
+	    result = options.transform(obj.css);
+
+	    if (result) {
+	    	// If transform returns a value, use that instead of the original css.
+	    	// This allows running runtime transformations on the css.
+	    	obj.css = result;
+	    } else {
+	    	// If the transform function returns a falsy value, don't add this css.
+	    	// This allows conditional loading of css
+	    	return function() {
+	    		// noop
+	    	};
+	    }
+	}
+
+	if (options.singleton) {
+		var styleIndex = singletonCounter++;
+
+		style = singleton || (singleton = createStyleElement(options));
+
+		update = applyToSingletonTag.bind(null, style, styleIndex, false);
+		remove = applyToSingletonTag.bind(null, style, styleIndex, true);
+
+	} else if (
+		obj.sourceMap &&
+		typeof URL === "function" &&
+		typeof URL.createObjectURL === "function" &&
+		typeof URL.revokeObjectURL === "function" &&
+		typeof Blob === "function" &&
+		typeof btoa === "function"
+	) {
+		style = createLinkElement(options);
+		update = updateLink.bind(null, style, options);
+		remove = function () {
+			removeStyleElement(style);
+
+			if(style.href) URL.revokeObjectURL(style.href);
+		};
+	} else {
+		style = createStyleElement(options);
+		update = applyToTag.bind(null, style);
+		remove = function () {
+			removeStyleElement(style);
+		};
+	}
+
+	update(obj);
+
+	return function updateStyle (newObj) {
+		if (newObj) {
+			if (
+				newObj.css === obj.css &&
+				newObj.media === obj.media &&
+				newObj.sourceMap === obj.sourceMap
+			) {
+				return;
+			}
+
+			update(obj = newObj);
+		} else {
+			remove();
+		}
+	};
+}
+
+var replaceText = (function () {
+	var textStore = [];
+
+	return function (index, replacement) {
+		textStore[index] = replacement;
+
+		return textStore.filter(Boolean).join('\n');
+	};
+})();
+
+function applyToSingletonTag (style, index, remove, obj) {
+	var css = remove ? "" : obj.css;
+
+	if (style.styleSheet) {
+		style.styleSheet.cssText = replaceText(index, css);
+	} else {
+		var cssNode = document.createTextNode(css);
+		var childNodes = style.childNodes;
+
+		if (childNodes[index]) style.removeChild(childNodes[index]);
+
+		if (childNodes.length) {
+			style.insertBefore(cssNode, childNodes[index]);
+		} else {
+			style.appendChild(cssNode);
+		}
+	}
+}
+
+function applyToTag (style, obj) {
+	var css = obj.css;
+	var media = obj.media;
+
+	if(media) {
+		style.setAttribute("media", media)
+	}
+
+	if(style.styleSheet) {
+		style.styleSheet.cssText = css;
+	} else {
+		while(style.firstChild) {
+			style.removeChild(style.firstChild);
+		}
+
+		style.appendChild(document.createTextNode(css));
+	}
+}
+
+function updateLink (link, options, obj) {
+	var css = obj.css;
+	var sourceMap = obj.sourceMap;
+
+	/*
+		If convertToAbsoluteUrls isn't defined, but sourcemaps are enabled
+		and there is no publicPath defined then lets turn convertToAbsoluteUrls
+		on by default.  Otherwise default to the convertToAbsoluteUrls option
+		directly
+	*/
+	var autoFixUrls = options.convertToAbsoluteUrls === undefined && sourceMap;
+
+	if (options.convertToAbsoluteUrls || autoFixUrls) {
+		css = fixUrls(css);
+	}
+
+	if (sourceMap) {
+		// http://stackoverflow.com/a/26603875
+		css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+	}
+
+	var blob = new Blob([css], { type: "text/css" });
+
+	var oldSrc = link.href;
+
+	link.href = URL.createObjectURL(blob);
+
+	if(oldSrc) URL.revokeObjectURL(oldSrc);
+}
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var game = __webpack_require__(1);
+var login = __webpack_require__(11);
+
+io.socket.on('connect', function socketConnected(socket) {
+	io.socket.get('/current_user', function(user) {
+		if (user && user.id) {
+			game.init(user);
+		}
+		else {
+			game.refreshGameState();
+			login.init();
+		}
+
+		io.socket.on('chat', function messageReceived(data) {
+			game.receiveChat(data);
+		});
+
+		io.socket.on('userDisconnect', function(data) {
+			game.userDisconnect(data);
+		});
+
+		io.socket.on('userLeave', function(data) {
+			game.userLeave(data);
+		});
+
+		io.socket.on('updateCountdown', function(data) {
+			game.updateCountdown(data);
+		});
+
+		io.socket.on('addTile', function(data) {
+			game.addTile(data);
+		});
+
+		io.socket.on('refreshGameState', function(data) {
+			game.refreshGameState(data);
+		});
+
+		io.socket.on('refreshTiles', function(data) {
+			game.refreshTiles(data);
+		});
+
+		io.socket.on('refreshPlayerWords', function(data) {
+			game.refreshPlayerWords(data);
+		});
+
+		io.socket.on('removeTiles', function(data) {
+			game.removeTiles(data);
+		});
+
+		io.socket.on('addWordToPlayer', function(data) {
+			game.addWordToPlayer(data);
+		});
+
+		io.socket.on('message', function(data) {
+		});
+
+		io.socket.on('endGame', function(data) {
+			game.endGame(data);
+		});
+
+	});
+});
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(6);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__(3)(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../../node_modules/css-loader/index.js!./gameroom.css", function() {
+			var newContent = require("!!../../node_modules/css-loader/index.js!./gameroom.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(2)(undefined);
+// imports
+
+
+// module
+exports.push([module.i, "@border-light: #eeeeee;\n\n:root {\n\t--menu-height: 35px;\n\t--menu-button-width: 100px;\n\t--menu-button-height: 50px;\n}\n\nhtml {\n\theight: 100%;\n\twidth: 100%;\n}\n\nbody {\n\theight: 100%;\n\twidth: 100%;\n}\n\n.blur {\n\tfilter: blur(4px);\n}\n\n.game-container {\n\theight: 100%;\n}\n\n.tiles-container {\n\tposition: relative;\n\twidth: 100%;\n\theight: 60%;\n\tmin-height: 300px;\n\tfloat: left;\n\tdisplay: inline-block;\n\tword-wrap: break-word;\n}\n\n.tiles-table {\n\tdisplay: flex;\n\tflex-direction: column;\n\theight: 100%;\n\twidth: 100%;\n}\n\n.tile-row {\n\tdisplay: flex;\n\theight: 10%;\n}\n\n.tile {\n\tposition: relative;\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: center;\n\twidth: 10%;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 20px;\n}\n\n.tile-clone {\n\tposition: absolute;\n\tdisplay: inline-flex;\n\tz-index: 5;\n\tbackground-color: #ffffff;\n}\n\n.player-letter {\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: center;\n\tborder: 1px solid #eeeeee;\n\n\tposition: absolute;\n\twidth: 25px;\n\theight: 25px;\n\tdisplay: inline-flex;\n\tbackground-color: #ffffff;\n\theight: 25px;\n}\n\n@keyframes adjust {\n\tto { transform: translate(0px, 0px); }\n}\n\n.tile-activated {\n\tbackground-color: #ffff99;\n}\n\n.greyed {\n\ttransition: background-color 0.2s;\n\tbackground-color: #777777;\n}\n\n.chat-container {\n\twidth: 100%;\n\theight: 40%;\n\tdisplay: flex;\n\tflex-direction: column;\n\tfloat: left;\n\tvertical-align: top;\n\tpadding-top: 10px;\n}\n\n.chat-input {\n\twidth: 100%;\n\tmargin-bottom: 5px;\n}\n\n.chat {\n\twidth: 100%;\n\toverflow-y: scroll;\n\tborder: 1px solid #eeeeee;\n\tfont-size: 12px;\n\tflex-grow: 1;\n\tmargin-bottom: 5px;\n}\n\n.chat-time {\n\tcolor: #b3b3b3;\n}\n\n.chat-user-color-red {\n\tcolor: #e50000;\n}\n\n.chat-user-color-blue {\n\tcolor: #0000cd;\n}\n\n.chat-text {\n\twhite-space: pre;\n}\n\n.users-container {\n\theight: calc(100% - var(--menu-height));\n\twidth: 100%;\n\tdisplay: inline-block;\n\tfloat: left;\n}\n\n.users {\n\theight: 100%;\n}\n\n.user-word-container {\n\tdisplay: flex;\n\tflex-direction: column;\n\theight: 50%;\n\tpadding: 10px;\n}\n\n.user-name-container {\n\tdisplay: flex;\n\talign-items: center;\n\theight: 40px;\n\tmin-height: 40px;\n\tborder-bottom: 1px solid #eeeeee;\n}\n\n.user-name {\n\tfont-size: 24px;\n}\n\n.user-name-disconnected {\n\tfont-style: italic;\n\tcolor: #a9a9a9;\n}\n\n.user-status {\n\tborder-radius: 50%;\n\theight: 10px;\n\twidth: 10px;\n\tmargin-left: 5px;\n}\n\n.status-connected {\n\tbackground-image: radial-gradient(farthest-corner at 75% 25%, #addbad 0%, #5cb85c 100%);\n}\n\n.status-disconnected {\n\tbackground-image: radial-gradient(farthest-corner at 75% 25%, #ff7f7f 0%, #e60000 100%);\n}\n\n.user-score {\n\tmargin-left: auto;\n\tfont-size: 24px;\n}\n\n.words-container {\n\tdisplay: flex;\n\tflex-direction: column;\n\tflex-wrap: wrap;\n\tflex-grow: 1;\n\tmargin-top: 10px;\n}\n\n.player-word {\n\theight: 25px;\n\tposition: relative;\n\tdisplay: flex;\n\tfont-size: 14px;\n}\n\n.menu-container {\n\tdisplay: flex;\n\tjustify-content: flex-end;\n\theight: var(--menu-height);\n\twidth: 100%;\t\n}\n\n.menu-button {\n\theight: 100%;\n\twidth: var(--menu-button-width);\n\ttext-align: center;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-content: center;\n\tflex-direction: column;\n\tborder: 1px solid #eeeeee;\n\ttransition: color 0.2s ease-out, border 0.2s ease-out;\n}\n\n.menu-button:hover {\n\tcursor: pointer;\n\ttransition: color 0.2s ease, border 0.2s ease;\n\tcolor: #00aadf;\n\tborder: 1px solid #00aadf;\n}\n\n.menu-button:active {\n\tcolor: #a8c9e4;\n\tborder: 1px solid #a8c9e4;\n}\n\n.new-game-button {\n\tposition: absolute;\n\ttext-align: center;\n\theight: var(--menu-button-height);\n\ttop: calc(50% - var(--menu-button-height) / 2);\t\n\tleft: calc(50% - var(--menu-button-width) / 2);\n\tbackground-color: #ffffff;\n\tz-index: 5;\n\tborder: 1px solid #585858;\n}\n\n.logout-button {\n\tfloat: right;\n}\n\n.menu-button-hidden {\n\tdisplay: none;\n}\n\n.column-left {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.column-middle {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 50%;\n\theight: 100%;\n}\n\n.column-right {\n\tfloat: left;\n\tdisplay: inline-block;\n\twidth: 25%;\n\theight: 100%;\n}\n\n.countdown {\n\tdisplay: flex;\n\twidth: 40px;\n\tjustify-content: center;\n\talign-items: center;\n\tflex-direction: column;\n\tfont-size: 16px;\n}\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+
+/**
+ * When source maps are enabled, `style-loader` uses a link element with a data-uri to
+ * embed the css on the page. This breaks all relative urls because now they are relative to a
+ * bundle instead of the current page.
+ *
+ * One solution is to only use full urls, but that may be impossible.
+ *
+ * Instead, this function "fixes" the relative urls to be absolute according to the current page location.
+ *
+ * A rudimentary test suite is located at `test/fixUrls.js` and can be run via the `npm test` command.
+ *
+ */
+
+module.exports = function (css) {
+  // get current location
+  var location = typeof window !== "undefined" && window.location;
+
+  if (!location) {
+    throw new Error("fixUrls requires window.location");
+  }
+
+	// blank or null?
+	if (!css || typeof css !== "string") {
+	  return css;
+  }
+
+  var baseUrl = location.protocol + "//" + location.host;
+  var currentDir = baseUrl + location.pathname.replace(/\/[^\/]*$/, "/");
+
+	// convert each url(...)
+	/*
+	This regular expression is just a way to recursively match brackets within
+	a string.
+
+	 /url\s*\(  = Match on the word "url" with any whitespace after it and then a parens
+	   (  = Start a capturing group
+	     (?:  = Start a non-capturing group
+	         [^)(]  = Match anything that isn't a parentheses
+	         |  = OR
+	         \(  = Match a start parentheses
+	             (?:  = Start another non-capturing groups
+	                 [^)(]+  = Match anything that isn't a parentheses
+	                 |  = OR
+	                 \(  = Match a start parentheses
+	                     [^)(]*  = Match anything that isn't a parentheses
+	                 \)  = Match a end parentheses
+	             )  = End Group
+              *\) = Match anything and then a close parens
+          )  = Close non-capturing group
+          *  = Match anything
+       )  = Close capturing group
+	 \)  = Match a close parens
+
+	 /gi  = Get all matches, not the first.  Be case insensitive.
+	 */
+	var fixedCss = css.replace(/url\s*\(((?:[^)(]|\((?:[^)(]+|\([^)(]*\))*\))*)\)/gi, function(fullMatch, origUrl) {
+		// strip quotes (if they exist)
+		var unquotedOrigUrl = origUrl
+			.trim()
+			.replace(/^"(.*)"$/, function(o, $1){ return $1; })
+			.replace(/^'(.*)'$/, function(o, $1){ return $1; });
+
+		// already a full url? no change
+		if (/^(#|data:|http:\/\/|https:\/\/|file:\/\/\/)/i.test(unquotedOrigUrl)) {
+		  return fullMatch;
+		}
+
+		// convert the url to a full url
+		var newUrl;
+
+		if (unquotedOrigUrl.indexOf("//") === 0) {
+		  	//TODO: should we add protocol?
+			newUrl = unquotedOrigUrl;
+		} else if (unquotedOrigUrl.indexOf("/") === 0) {
+			// path should be relative to the base url
+			newUrl = baseUrl + unquotedOrigUrl; // already starts with '/'
+		} else {
+			// path should be relative to current directory
+			newUrl = currentDir + unquotedOrigUrl.replace(/^\.\//, ""); // Strip leading './'
+		}
+
+		// send back the fixed url(...)
+		return "url(" + JSON.stringify(newUrl) + ")";
+	});
+
+	// send back the fixed css
+	return fixedCss;
+};
+
+
+/***/ }),
 /* 8 */
 /***/ (function(module, exports) {
 
@@ -18138,8 +18344,75 @@ module.exports = function(module) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
-	__webpack_require__(11),
-	__webpack_require__(7),
+	__webpack_require__(0)
+], __WEBPACK_AMD_DEFINE_RESULT__ = function(
+	_
+) {
+	return {
+		cloneAndAnimateMove: function(source, targetContainer, cloneClass, newEl, letterCount, letterPos) {
+			var sourceClone = source.clone();
+			sourceClone.width(source.width());
+			sourceClone.height(source.height());
+			sourceClone.addClass(cloneClass);
+	
+			targetContainer.append(sourceClone);
+			var translateX = source.offset().left - sourceClone.offset().left;
+			if (letterPos) {
+				translateX += letterPos * sourceClone.outerWidth();
+			}
+
+			var translateY = source.offset().top - sourceClone.offset().top;
+			sourceClone.css({ left: translateX, top: translateY });
+	
+			var scale = targetContainer.height() / source.height();
+			var leftOffset = 0;
+			if (letterCount) leftOffset += letterCount * targetContainer.height();
+			return new Promise(function(resolve) {
+				sourceClone.velocity({
+					left: leftOffset,
+					top: 0,
+					height: targetContainer.height(),
+					width: targetContainer.height(),
+					fontSize: targetContainer.css('font-size')
+				}, {
+					duration: 500,
+					easing: "easeInOutCubic",
+					complete: function() {
+						var $newEl = $(newEl);
+						$newEl.css('left', leftOffset);
+						sourceClone.replaceWith($newEl);
+						resolve();
+					}	
+				});
+			});
+		},
+
+		animateMove: function(source, letterCount) {
+			return new Promise(function(resolve) {
+				source.velocity({
+					left: letterCount * source.outerWidth(),
+					top: 0
+				}, {
+					duration: 500,
+					easing: "easeInOutCubic",
+					complete: function() {
+						resolve();
+					}
+				});
+			});
+		}
+	};
+}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_ARRAY__ = [
+	__webpack_require__(12),
+	__webpack_require__(0),
 	__webpack_require__(1)
 ], __WEBPACK_AMD_DEFINE_RESULT__ = function(
 	gamestyles,
@@ -18260,13 +18533,13 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(12);
+var content = __webpack_require__(13);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // Prepare cssTransformation
 var transform;
@@ -18274,7 +18547,7 @@ var transform;
 var options = {}
 options.transform = transform
 // add the styles to the DOM
-var update = __webpack_require__(5)(content, options);
+var update = __webpack_require__(3)(content, options);
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -18291,15 +18564,15 @@ if(false) {
 }
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(4)(undefined);
+exports = module.exports = __webpack_require__(2)(undefined);
 // imports
 
 
 // module
-exports.push([module.i, ".lightbox {\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: center;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\twidth: 100%;\n\theight: 100%;\n\tbackground-color: rgba(0, 0, 0, 0.4);\n}\n\n.lightbox-content {\n\tbox-shadow: 0 0 25px #111;\n\tborder-radius: 5px;\n\twidth: 30%;\n\theight: 40%;\n\tmin-width: 400px;\n\tmin-height: 250px;\n\tpadding: 20px;\n\tbackground-color: #ffffff;\n}\n\n.register-container, .login-container {\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: flex-start;\n\theight: 100%;\n}\n\n.header-row {\n\tfont-size: 22px;\n\tcolor: #555;\n}\n\n.auth-title {\n\twidth: 80px;\n\tdisplay: inline-flex;\n}\n\nlabel {\n\tpadding-top: 10px;\n\tcolor: #555;\n\tdisplay: inline-block;\n}\n\ninput[type=text], input[type=password] {\n\tpadding-left: 5px;\n\twidth: 100%;\n\tborder: 1px solid #c7d0d2;\n\tborder-radius: 3px;\n\ttransition: box-shadow 0.2s ease-out;\n}\n\ninput[type=text]:hover, input[type=password]:hover {\n\tborder: 1px solid #b6bfc0;\n\tbox-shadow: inset 0 1.5px 3px rgba(190, 190, 190, .7), 0 0 0 3px #f5f7f8;\n}\n\ninput[type=text]:focus, input[type=password]:focus {\n\tborder: 1px solid #a8c9e4;\n\tbox-shadow: inset 0 1.5px 3px rgba(190, 190, 190, .4), 0 0 0 3px #e6f2f9;\n}\n\n.invalid-input {\n\ttransition: box-shadow 0.2s ease;\n\tbox-shadow: 0 0 3px #CC0000;\n}\n\n.button-row {\n\tdisplay: flex;\n\twidth: 100%;\n\theight: 100%;\n\tflex-grow: 1;\n}\n\n.auth-button {\n\ttransition: color 0.2s ease-out, border 0.2s ease-out;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-content: center;\n\tflex-direction: column;\n\ttext-align: center;\n\tborder-radius: 3px;\n\tborder: 1px solid #c7d0d2;\n}\n\n.register-button, .login-button {\n\talign-self: flex-end;\n\tmargin-left: auto;\n\theight: 40px;\n\twidth: 100%;\n}\n\n.switch-to-register-button, .switch-to-login-button {\n\tdisplay: inline-flex;\n\tfloat: right;\n\theight: 40px;\n\twidth: 80px;\n\tfont-size: 14px;\n}\n\n.auth-button:hover {\n\tcursor: pointer;\n\ttransition: color 0.2s ease, border 0.2s ease;\n\tcolor: #00aadf;\n\tborder: 1px solid #00aadf;\n}\n\n.auth-button:active {\n\tcolor: #a8c9e4;\n\tborder: 1px solid #a8c9e4;\n}\n\n.validation-error-container {\n\theight: 10px;\n\twidth: 100%;\n}\n\n.validation-error {\n\theight: 100%;\n\tfont-size: 10px;\n}\n", ""]);
+exports.push([module.i, ".lightbox {\n\tdisplay: flex;\n\talign-items: center;\n\tjustify-content: center;\n\tposition: fixed;\n\ttop: 0;\n\tleft: 0;\n\twidth: 100%;\n\theight: 100%;\n\tbackground-color: rgba(0, 0, 0, 0.4);\n\tz-index: 10;\n}\n\n.lightbox-content {\n\tbox-shadow: 0 0 25px #111;\n\tborder-radius: 5px;\n\twidth: 30%;\n\theight: 40%;\n\tmin-width: 400px;\n\tmin-height: 250px;\n\tpadding: 20px;\n\tbackground-color: #ffffff;\n}\n\n.register-container, .login-container {\n\tdisplay: flex;\n\tflex-direction: column;\n\tjustify-content: flex-start;\n\theight: 100%;\n}\n\n.header-row {\n\tfont-size: 22px;\n\tcolor: #555;\n}\n\n.auth-title {\n\twidth: 80px;\n\tdisplay: inline-flex;\n}\n\nlabel {\n\tpadding-top: 10px;\n\tcolor: #555;\n\tdisplay: inline-block;\n}\n\ninput[type=text], input[type=password] {\n\tpadding-left: 5px;\n\twidth: 100%;\n\tborder: 1px solid #c7d0d2;\n\tborder-radius: 3px;\n\ttransition: box-shadow 0.2s ease-out;\n}\n\ninput[type=text]:hover, input[type=password]:hover {\n\tborder: 1px solid #b6bfc0;\n\tbox-shadow: inset 0 1.5px 3px rgba(190, 190, 190, .7), 0 0 0 3px #f5f7f8;\n}\n\ninput[type=text]:focus, input[type=password]:focus {\n\tborder: 1px solid #a8c9e4;\n\tbox-shadow: inset 0 1.5px 3px rgba(190, 190, 190, .4), 0 0 0 3px #e6f2f9;\n}\n\n.invalid-input {\n\ttransition: box-shadow 0.2s ease;\n\tbox-shadow: 0 0 3px #CC0000;\n}\n\n.button-row {\n\tdisplay: flex;\n\twidth: 100%;\n\theight: 100%;\n\tflex-grow: 1;\n}\n\n.auth-button {\n\ttransition: color 0.2s ease-out, border 0.2s ease-out;\n\tdisplay: flex;\n\tjustify-content: center;\n\talign-content: center;\n\tflex-direction: column;\n\ttext-align: center;\n\tborder-radius: 3px;\n\tborder: 1px solid #c7d0d2;\n}\n\n.register-button, .login-button {\n\talign-self: flex-end;\n\tmargin-left: auto;\n\theight: 40px;\n\twidth: 100%;\n}\n\n.switch-to-register-button, .switch-to-login-button {\n\tdisplay: inline-flex;\n\tfloat: right;\n\theight: 40px;\n\twidth: 80px;\n\tfont-size: 14px;\n}\n\n.auth-button:hover {\n\tcursor: pointer;\n\ttransition: color 0.2s ease, border 0.2s ease;\n\tcolor: #00aadf;\n\tborder: 1px solid #00aadf;\n}\n\n.auth-button:active {\n\tcolor: #a8c9e4;\n\tborder: 1px solid #a8c9e4;\n}\n\n.validation-error-container {\n\theight: 10px;\n\twidth: 100%;\n}\n\n.validation-error {\n\theight: 100%;\n\tfont-size: 10px;\n}\n", ""]);
 
 // exports
 

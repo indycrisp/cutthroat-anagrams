@@ -44,20 +44,15 @@ module.exports = {
 			});
 
 			return Promise.all([
-				self.addPlayerWord(user, word),
-				self.removePlayerWords(wordsToRemove),
+				self.addPlayerWord(user, word, wordsToRemove),
+				self.removePlayerWords(user, wordsToRemove),
 				self.removeGameTiles(tilesToRemove)
 			]).spread(function(
-				playerWord,
-				removedWords,
+				playerWordData,
+				removedWordData,
 				removedTiles
 			) {
-				GameService.events.removeTiles(user, removedTiles);
-				GameService.events.addWordToPlayer(user, playerWord);
-
-				if (removedWords.length) {
-					GameService.events.removeWordsFromPlayers(user, removedWords);				
-				}
+				GameService.events.addWordToPlayer(user, playerWordData.playerWord, playerWordData.userGame, removedWordData, removedTiles);
 			});
 		});
 	},
@@ -149,21 +144,86 @@ module.exports = {
 		return;
 	},
 
-	addPlayerWord: function(user, word) {
+	addPlayerWord: function(user, word, wordsToRemove) {
 		var self = this;
 
+		var letterRemoveCount = 0;
+		_.each(wordsToRemove, function(removedWord) {
+			if (removedWord.user == user.id) {
+				letterRemoveCount += removedWord.word.length;
+			}
+		});
+
+		var newGameWord;
 		return Gameword.create({
 			game: user.game.id,
 			word: word.toUpperCase(),
 			user: user.id
+		})
+		.then(function(gameWord) {
+			newGameWord = gameWord;
+			return Usergame.findUserGames({ user: user.id, game: user.game.id });
+		})
+		.then(function(userGames) {
+			var userGame = userGames[0];
+			var value = userGame.score + word.length - letterRemoveCount;
+			return Usergame.update({ id: userGame.id }, { score: value });
+		})
+		.then(function(updatedUserGames) {
+			return {
+				playerWord: newGameWord,
+				userGame: updatedUserGames[0]
+			};
 		});
 	},
 
-	removePlayerWords: function(words) {
+	removePlayerWords: function(user, words) {
 		var self = this;
 
-		var ids = _.map(words, 'id');
-		return Gameword.destroy({ id: ids });
+		if (!words || !words.length) return;
+
+		var removedWords = [];
+		return Gameword.destroy({ id: _.map(words, 'id') })
+		.then(function(gameWords) {
+			removedWords = gameWords;
+			return Usergame.findUserGames({ game: gameWords[0].game });
+		})
+		.then(function(userGames) {
+			var playerWordData = {};
+			_.each(removedWords, function(removedWord) {
+				if (removedWord.user != user.id) {
+					if (!playerWordData[removedWord.user]) playerWordData[removedWord.user] = [];
+					playerWordData[removedWord.user].push(removedWord);
+				}
+			});
+
+			var updates = [];
+			_.each(userGames, function(userGame) {
+				var wordData = playerWordData[userGame.user.id];
+				var score = userGame.score;
+				var updated = false;
+				if (wordData && wordData.length) {
+					_.each(wordData, function(word) {
+						score -= word.word.length;
+					});
+
+					updated = true;
+				}
+
+				if (updated) {
+					var updateUserGamePromise = Usergame.update({ id: userGame.id }, { score: score });
+					updates.push(updateUserGamePromise);
+				}
+			});
+			
+			return Promise.map(updates, function(data) { return data; });
+		})
+		.then(function(updatedUserGames) {
+			return {
+				removedWords: removedWords,
+				userGames: _.map(updatedUserGames, function(updatedGame) { return updatedGame[0]; })
+			};
+		});
 	},
 
 	removeGameTiles: function(tiles) {

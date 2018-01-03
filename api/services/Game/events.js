@@ -1,32 +1,24 @@
 module.exports = {
-	removeTiles: function(user, tiles) {
-		sails.sockets.broadcast(user.room.id, 'removeTiles', {
-			tiles: tiles
-		});	
-	},
-
-	addWordToPlayer: function(user, word) {
+	addWordToPlayer: function(user, word, userGame, removedWordData, removedTiles) {
 		sails.sockets.broadcast(user.room.id, 'addWordToPlayer', {
 			word: word,
-			user: user
-		});
-	},
-
-	removeWordsFromPlayers: function(user, words) {
-		sails.sockets.broadcast(user.room.id, 'removeWordsFromPlayers', {
-			words: words
+			user: user,
+			userGame: userGame,
+			removedTiles: removedTiles,
+			removedWordData: removedWordData
 		});
 	},
 
 	sendChat: function(data) {
 		sails.sockets.broadcast(data.user.room.id, 'chat', {
-			user: data.user.username,
+			user: data.user,
+			userColor: data.userColor,
 			text: data.text,
 			createdDate: data.createdDate
 		});
 	},
 
-	refreshGameState: function(room, game, tiles, words, chat) {
+	refreshGameState: function(room, game, tiles, words, chat, userGames) {
 		var wordsByPlayer = {};
 		words.sort(function(a, b) {
 			return a.id - b.id;
@@ -42,7 +34,8 @@ module.exports = {
 			users: game.users,
 			tiles: tiles,
 			words: wordsByPlayer,
-			chat: chat
+			chat: chat,
+			userGames: userGames
 		});
 	},
 
