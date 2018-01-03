@@ -8,6 +8,7 @@ io.socket.on('connect', function socketConnected(socket) {
 		}
 		else {
 			game.refreshGameState();
+			game.handleResize();
 			login.init();
 		}
 

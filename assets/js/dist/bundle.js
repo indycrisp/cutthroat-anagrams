@@ -17174,8 +17174,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 			var self = this;
 
 			self.user = user;
-			//self.animationQueues = {};
-			//self.animationQueue = [];
 			self.animation = Promise.resolve();
 
 			//TODO: Have the controller do the "joining" before the rendering (res.view())
@@ -18090,6 +18088,7 @@ io.socket.on('connect', function socketConnected(socket) {
 		}
 		else {
 			game.refreshGameState();
+			game.handleResize();
 			login.init();
 		}
 

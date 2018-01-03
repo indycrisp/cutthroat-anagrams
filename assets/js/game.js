@@ -13,8 +13,6 @@ define([
 			var self = this;
 
 			self.user = user;
-			//self.animationQueues = {};
-			//self.animationQueue = [];
 			self.animation = Promise.resolve();
 
 			//TODO: Have the controller do the "joining" before the rendering (res.view())
