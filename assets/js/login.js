@@ -50,13 +50,13 @@ define([
 				self.submit('register');
 			});
 
-			$('.switch-to-register-button').off('click').click(function() {
+			$('.switch-to-register').off('click').click(function() {
 				var registerTemplate = JST['assets/templates/login/register.ejs'];
 				$('.auth-container').replaceWith(registerTemplate);
 				self.attachListeners();
 			});
 
-			$('.switch-to-login-button').off('click').click(function() {
+			$('.switch-to-login').off('click').click(function() {
 				var loginTemplate = JST['assets/templates/login/login.ejs'];
 				$('.auth-container').replaceWith(loginTemplate);
 				self.attachListeners();
