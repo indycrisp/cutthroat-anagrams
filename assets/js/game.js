@@ -12,7 +12,6 @@ define([
 		init: function(user) {
 			var self = this;
 
-			console.log('POOP');
 			self.user = user;
 			self.animation = Promise.resolve();
 

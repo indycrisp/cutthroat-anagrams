@@ -7,6 +7,7 @@ io.socket.on('connect', function socketConnected(socket) {
 			game.init(user);
 		}
 		else {
+			console.log('POOP');
 			game.refreshGameState();
 			game.handleResize();
 			login.init();

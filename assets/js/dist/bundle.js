@@ -17173,7 +17173,6 @@ var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
 		init: function(user) {
 			var self = this;
 
-			console.log('POOP');
 			self.user = user;
 			self.animation = Promise.resolve();
 
@@ -18088,6 +18087,7 @@ io.socket.on('connect', function socketConnected(socket) {
 			game.init(user);
 		}
 		else {
+			console.log('POOP');
 			game.refreshGameState();
 			game.handleResize();
 			login.init();
