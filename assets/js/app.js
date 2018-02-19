@@ -53,7 +53,6 @@ io.socket.on('connect', function socketConnected(socket) {
 		});
 
 		io.socket.on('message', function(data) {
-			debugger;
 		});
 
 		io.socket.on('endGame', function(data) {
