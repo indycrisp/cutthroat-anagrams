@@ -8,6 +8,7 @@
     "bcrypt": "^1.0.2",
     "bluebird": "^3.5.1",
     "check-word": "^1.1.0",
+    "connect-redis": "^3.3.3",
     "css-loader": "^0.28.4",
     "ejs": "2.3.4",
     "ejs2-loader": "^1.0.0",

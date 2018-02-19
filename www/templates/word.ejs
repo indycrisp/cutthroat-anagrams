@@ -1,0 +1,7 @@
+<div id='player-word-<%= word.id %>' class='player-word'>
+	<% if (!noLetters) { %>
+		<% for (var i = 0; i < word.word.length; i++) { %>
+			<div class='player-letter' style='left: <%= i*25 %>px'><%= word.word[i] %></div>
+		<% } %>	
+	<% } %>
+</div>
