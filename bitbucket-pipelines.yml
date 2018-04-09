@@ -6,4 +6,6 @@ pipelines:
         name: "Deploy to production"
         deployment: production
         script:
+          - ssh root@104.131.28.152
+          - cat deploy.sh
           - echo "Deploy finished"
