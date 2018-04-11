@@ -1,5 +1,4 @@
 #!/bin/bash
 
-run="sails lift --prod"
+run="sails lift --prod --verbose"
 $run &
-exit
