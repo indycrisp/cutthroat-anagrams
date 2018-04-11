@@ -9,5 +9,5 @@ pipelines:
           - mkdir -p ~/.ssh
           - cat known_hosts >> ~/.ssh/known_hosts
           - (umask 077; echo $MY_SSH_KEY | base64 --decode > ~/.ssh/id_rsa)
-          - ssh -vvv root@104.131.28.152
+          - ssh -t -vvv root@104.131.28.152
           - echo "Deploy finished"
