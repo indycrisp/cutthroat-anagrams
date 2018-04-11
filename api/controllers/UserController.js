@@ -4,7 +4,7 @@
  * @description :: Server-side logic for managing users
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
-
+//hihi
 var _ = require('lodash');
 var Promise = require('bluebird');
 module.exports = {
