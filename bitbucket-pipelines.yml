@@ -7,4 +7,4 @@ pipelines:
         deployment: production
         script:
           - ssh -T root@104.131.28.152
-          - bash deploy.sh
+          - ./deploy.sh
