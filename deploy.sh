@@ -1,4 +1,6 @@
 #!/bin/bash
 
-run="sails lift --prod --verbose"
+stopall="forever stopall"
+run="forever start app.js"
+$stopall
 $run &
