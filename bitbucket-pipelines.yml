@@ -6,4 +6,4 @@ pipelines:
         name: "Deploy to production"
         deployment: production
         script:
-          - ssh -T root@104.131.28.152 'cd ~/cutthroat-anagrams/; bash deploy.sh'
+          - ssh -T root@104.131.28.152 'cd ~/cutthroat-anagrams/; bash pull.sh; bash deploy.sh'
