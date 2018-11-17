@@ -17160,7 +17160,6 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;//TODO: use LESS
-// hihi
 !(__WEBPACK_AMD_DEFINE_ARRAY__ = [
 	__webpack_require__(5),
 	__webpack_require__(0),

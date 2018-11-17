@@ -1,5 +1,4 @@
 //TODO: use LESS
-// hihi
 define([
 	'../styles/gameroom.css',
 	'lodash',
