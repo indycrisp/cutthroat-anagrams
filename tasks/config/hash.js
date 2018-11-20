@@ -7,7 +7,7 @@ module.exports = function(grunt) {
 			src: [
 				'.tmp/public/jst.js'
 			],
-			dest: 'views/layout.ejs'
+			dest: './views/layout_base.ejs'
 		},
 	});
 	
