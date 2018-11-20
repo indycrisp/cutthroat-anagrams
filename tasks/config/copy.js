@@ -33,7 +33,7 @@ module.exports = function(grunt) {
     build: {
       files: [{
         expand: true,
-        cwd: '.tmp/public/hash',
+        cwd: '.tmp/public',
         src: ['**/*'],
         dest: 'www'
       }]
