@@ -5,3 +5,4 @@ node_modules/.bin/webpack
 git add .
 git commit -m "default"
 git push origin master &
+exit 0
