@@ -12,6 +12,7 @@ define([
 		init: function(user) {
 			var self = this;
 
+			console.log('poopbutt');
 			self.user = user;
 			self.animation = Promise.resolve();
 
