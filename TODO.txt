@@ -1,5 +1,3 @@
-- in views/layout.ejs, figure out how to reset browser cache when static content changes (more sophisticated than manually updating v=1.x every time)
-- figure out how to have webpack generate jst.js so that i can avoid using grunt altogether
 - align word containers so that words are closest to the board
 - fix login/register pages (do they need to be pages?)
 	- get rid of extraneous routes in config/routes
@@ -13,3 +11,5 @@
 - handle room/socket on disconnect
 - why can't I require jquery and sails.io without a script tag?
 - switch DB
+- figure out how to have webpack generate jst.js so that i can avoid using grunt altogether
+- use minified JS in production
