@@ -109,9 +109,9 @@ module.exports = function(grunt) {
 			appRoot: '.tmp/public'
 		},
 		files: {
-			'.tmp/public/**/*.html': ['.tmp/public/min/require.min.js'],
-			'views/**/*.html': ['.tmp/public/min/require.min.js'],
-			'views/**/*.ejs': ['.tmp/public/min/require.min.js']
+			'.tmp/public/**/*.html': require('../pipeline').jsRequireFileToInject,
+			'views/**/*.html': require('../pipeline').jsRequireFileToInject,
+			'views/**/*.ejs': require('../pipeline').jsRequireFileToInject
 		}
 	},
 
@@ -139,9 +139,9 @@ module.exports = function(grunt) {
 			relative: true
 		},                                                                                                                                                                                                                                                                    
 		files: {                                                                                                                                                                                                                                                              
-			'.tmp/public/**/*.html': ['.tmp/public/min/require.min.js'],                                                                                                                                                                                                      
-			'views/**/*.html': ['.tmp/public/min/require.min.js'],                                                                                                                                                                                                            
-			'views/**/*.ejs': ['.tmp/public/min/require.min.js']                                                                                                                                                                                                              
+			'.tmp/public/**/*.html': require('../pipeline').jsRequireFileToInject,                                                                                                                                                              
+			'views/**/*.html': require('../pipeline').jsRequireFileToInject,                                                                                                                                                                                            
+			'views/**/*.ejs': require('../pipeline').jsRequireFileToInject,                                                                                                                                                                                                  
 		}                                                                                                                                                                                                                                                                     
 	},
 
