@@ -43,6 +43,20 @@ module.exports = function(grunt) {
         'views/**/*.ejs': require('../pipeline').jsFilesToInject
       }
     },
+    
+	devJsRequire: {
+    	options: {
+			startTag: '<!--REQUIRE-->',
+			endTag: '<!--REQUIRE END-->',
+			fileTmpl: '<script src="%s" data-main="js/app.js"></script>',
+			appRoot: '.tmp/public'
+		},
+		files: {
+			'.tmp/public/**/*.html': require('../pipeline').jsRequireFileToInject,
+			'views/**/*.html': require('../pipeline').jsRequireFileToInject,
+			'views/**/*.ejs': require('../pipeline').jsRequireFileToInject
+		}
+	},
 
     devJsRelative: {
       options: {
@@ -59,6 +73,20 @@ module.exports = function(grunt) {
       }
     },
 
+	devJsRequireRelative: {
+		options: {
+			startTag: '<!--REQUIRE-->',
+			endTag: '<!--REQUIRE END-->',
+			fileTmpl: '<script src="%s" data-main="js/app.js"></script>',
+			appRoot: '.tmp/public'
+		},
+		files: {
+			'.tmp/public/**/*.html': require('../pipeline').jsRequireFileToInject,
+			'views/**/*.html': require('../pipeline').jsRequireFileToInject,
+			'views/**/*.ejs': require('../pipeline').jsRequireFileToInject
+		}
+	},
+
     prodJs: {
       options: {
         startTag: '<!--SCRIPTS-->',
@@ -72,6 +100,20 @@ module.exports = function(grunt) {
         'views/**/*.ejs': ['.tmp/public/min/production.min.js']
       }
     },
+
+	prodJsRequire: {
+		options: {
+			startTag: '<!--REQUIRE-->',
+			endTag: '<!--REQUIRE END-->',
+			fileTmpl: '<script src="%s" data-main="js/app.js"></script>',
+			appRoot: '.tmp/public'
+		},
+		files: {
+			'.tmp/public/**/*.html': ['.tmp/public/min/require.min.js'],
+			'views/**/*.html': ['.tmp/public/min/require.min.js'],
+			'views/**/*.ejs': ['.tmp/public/min/require.min.js']
+		}
+	},
 
     prodJsRelative: {
       options: {
@@ -88,27 +130,42 @@ module.exports = function(grunt) {
       }
     },
 
-    devStyles: {
-      options: {
-        startTag: '<!--STYLES-->',
-        endTag: '<!--STYLES END-->',
-        fileTmpl: '<link rel="stylesheet" href="%s">',
-        appRoot: '.tmp/public'
-      },
+	prodJsRequireRelative: {
+		options: {                                                                                                                                                                                                                                                            
+			startTag: '<!--REQUIRE-->',                                                                                                                                                                                                                                       
+			endTag: '<!--REQUIRE END-->',                                                                                                                                                                                                                                     
+			fileTmpl: '<script src="%s" data-main="js/app.js"></script>',                                                                                                                                                                                                     
+			appRoot: '.tmp/public',
+			relative: true
+		},                                                                                                                                                                                                                                                                    
+		files: {                                                                                                                                                                                                                                                              
+			'.tmp/public/**/*.html': ['.tmp/public/min/require.min.js'],                                                                                                                                                                                                      
+			'views/**/*.html': ['.tmp/public/min/require.min.js'],                                                                                                                                                                                                            
+			'views/**/*.ejs': ['.tmp/public/min/require.min.js']                                                                                                                                                                                                              
+		}                                                                                                                                                                                                                                                                     
+	},
 
-      files: {
-        '.tmp/public/**/*.html': require('../pipeline').cssFilesToInject,
-        'views/**/*.html': require('../pipeline').cssFilesToInject,
-        'views/**/*.ejs': require('../pipeline').cssFilesToInject
-      }
-    },
+	devStyles: {
+	  options: {
+		startTag: '<!--STYLES-->',
+		endTag: '<!--STYLES END-->',
+		fileTmpl: '<link rel="stylesheet" href="%s">',
+		appRoot: '.tmp/public'
+	  },
 
-    devStylesRelative: {
-      options: {
-        startTag: '<!--STYLES-->',
-        endTag: '<!--STYLES END-->',
-        fileTmpl: '<link rel="stylesheet" href="%s">',
-        appRoot: '.tmp/public',
+	  files: {
+		'.tmp/public/**/*.html': require('../pipeline').cssFilesToInject,
+		'views/**/*.html': require('../pipeline').cssFilesToInject,
+		'views/**/*.ejs': require('../pipeline').cssFilesToInject
+	  }
+	},
+
+	devStylesRelative: {
+	  options: {
+		startTag: '<!--STYLES-->',
+		endTag: '<!--STYLES END-->',
+		fileTmpl: '<link rel="stylesheet" href="%s">',
+		appRoot: '.tmp/public',
         relative: true
       },
 

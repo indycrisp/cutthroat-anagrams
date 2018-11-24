@@ -36,6 +36,7 @@ var jsFilesToInject = [
   'js/dependencies/velocity.min.js',
   'js/dependencies/velocity.ui.min.js',
   'js/dependencies/lodash.min.js',
+  //'js/dependencies/require.js',
   //'js/dependencies/**/*.js',
 
   // All of the rest of your client-side js files
@@ -43,6 +44,9 @@ var jsFilesToInject = [
   //'js/**/*.js'
 ];
 
+var jsRequireFileToInject = [
+  'js/dependencies/require.js'
+];
 
 // Client-side HTML templates are injected using the sources below
 // The ordering of these templates shouldn't matter.
@@ -83,6 +87,12 @@ module.exports.jsFilesToInject = jsFilesToInject.map(function(jsPath) {
   }
   return require('path').join('.tmp/public/', jsPath);
 });
+module.exports.jsRequireFileToInject = jsRequireFileToInject.map(function(jsRequirePath) {
+  if (jsRequirePath[0] === '!') {
+	  return require('path').join('!.tmp/public/', jsRequirePath.substr(1));
+  }
+  return require('path').join('.tmp/public/', jsRequirePath);
+});
 module.exports.templateFilesToInject = templateFilesToInject.map(function(tplPath) {
   // If we're ignoring the file, make sure the ! is at the beginning of the path
   if (tplPath[0] === '!') {
@@ -90,5 +100,4 @@ module.exports.templateFilesToInject = templateFilesToInject.map(function(tplPat
   }
   return require('path').join('assets/',tplPath);
 });
-
 
