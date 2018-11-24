@@ -26,7 +26,7 @@ module.exports = {
 		var self = this;
 
 		if (!req.session.username) return;
-	
+
 		return GameService.join_game.connectToGame(req, res)
 		.then(function(updatedUser) {
 			return Promise.all([

@@ -1,7 +1,12 @@
-var game = require('./game');
-var login = require('./login');
-
-io.socket.on('connect', function socketConnected(socket) {
+require([
+	'./game',
+	'./login',
+	'./utils'
+], function(
+	game,
+	login,
+	Utils
+) {
 	io.socket.get('/current_user', function(user) {
 		if (user && user.id) {
 			game.init(user);

@@ -1,10 +1,6 @@
 define([
-	'../styles/login.css',
-	'lodash',
 	'./game'
 ], function(
-	gamestyles,
-	_,
 	game
 ) {
 	return {
@@ -14,8 +10,6 @@ define([
 			if ($('.lightbox').length) return;
 
 			var loginTemplate = JST['assets/templates/login/login.ejs'];
-			//var registerTemplate = JST['assets/templates/login/register.ejs'];
-
 			var lightboxHTML = JST['assets/templates/login/lightbox.ejs']({
 				contentTemplate: loginTemplate
 			});

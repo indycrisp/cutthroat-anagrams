@@ -1,7 +1,5 @@
 define([
-	'lodash'
 ], function(
-	_
 ) {
 	return {
 		cloneAndAnimateMove: function(source, targetContainer, cloneClass, newEl, letterCount, letterPos) {

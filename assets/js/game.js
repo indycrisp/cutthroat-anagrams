@@ -1,11 +1,7 @@
 //TODO: use LESS
 define([
-	'../styles/gameroom.css',
-	'lodash',
-	'./utils.js'	
+	'./utils'	
 ], function(
-	gamestyles,
-	_,
 	Utils
 ) {
 	return {	

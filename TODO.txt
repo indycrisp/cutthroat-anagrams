@@ -1,3 +1,6 @@
+- use webpack instead of grunt for JST?
+- use minified JS in production
+- hashified jst file is preventing dev server form working (JST missing)
 - align word containers so that words are closest to the board
 - fix login/register pages (do they need to be pages?)
 	- get rid of extraneous routes in config/routes
