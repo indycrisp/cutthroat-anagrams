@@ -1,6 +1,6 @@
-- use webpack instead of grunt for JST?
-- use minified JS in production
-- hashified jst file is preventing dev server form working (JST missing)
+- implement hashing of minified prod js/css
+- can I also hash JST?
+- weird websocket error
 - align word containers so that words are closest to the board
 - fix login/register pages (do they need to be pages?)
 	- get rid of extraneous routes in config/routes
@@ -12,7 +12,4 @@
 - track winner, record game histories
 - figure out issue with disallowing forms of words
 - handle room/socket on disconnect
-- why can't I require jquery and sails.io without a script tag?
 - switch DB
-- figure out how to have webpack generate jst.js so that i can avoid using grunt altogether
-- use minified JS in production
