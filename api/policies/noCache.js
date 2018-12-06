@@ -1,7 +1,7 @@
 module.exports = function(req, res, next) {
 	sails.log.info("Applying cache disabling");
-	res.header('Cache-Control', 'no-cache');
-	res.header('Expires', '-1');
-	res.header('Pragma', 'no-cache');
+	res.setHeader('Cache-Control', 'no-cache');
+	res.setHeader('Expires', '-1');
+	res.setHeader('Pragma', 'no-cache');
 	next();
 };
