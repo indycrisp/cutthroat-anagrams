@@ -44,13 +44,22 @@ module.exports.http = {
 			'compress',
 			'methodOverride',
 			'poweredBy',
+			'noCache',
 			'router',
 			'www',
 			'favicon',
 			'404',
 			'500'
-		]
+		],
 
+		//TODO: use hashing on static content instead of disabling cache
+		noCache: function(req, res, next) {
+			//sails.log.info('Disabling cache');
+			res.setHeader('Cache-Control', 'no-cache');
+			//res.setHeader('Expires', '-1');
+			//res.setHeader('Pragma', 'no-cache');
+			next();
+		}
 		/****************************************************************************
 		*                                                                           *
 		* Example custom middleware; logs each request to the console.              *
