@@ -22,13 +22,25 @@ define([
 		attachListeners: function() {
 			var self = this;
 
-			$('input').off('enterKey').bind('enterKey', function(event) {
-				var authContainer = $(event.target).closest('.auth-container');
-				if (authContainer.hasClass('login-container')) {
-					self.submit('login');
-				}
-				else if (authContainer.hasClass('register-container')) {
-					self.submit('register');
+			$(document).keypress(function(e) {
+				if (e.which === 13) {
+					var authContainer = $('.auth-container');
+					if (
+						authContainer.hasClass('login-container')
+						&& $('.login-username').val()
+						&& $('.login-password').val()
+					) {
+						$('.login-username,.login-password').blur();
+						self.submit('login');
+					}
+					else if (
+						authContainer.hasClass('register-container')
+						&& $('.register-username').val()
+						&& $('.register-password').val()
+					) {
+						$('.register-username,.register-password').blur();
+						self.submit('register');
+					}
 				}
 			});
 
